@@ -3,3 +3,4 @@ plugins {
 }
 
 include 'engine'
+include 'probe'

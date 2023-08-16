@@ -17,6 +17,7 @@ Let's be honest here: TinyWasmR initial goal wasn't "bringing component written 
 
 ## TinyWasmR components
 - `engine`: The engine part (a.k.a the virtual machine). Contains `.wasm` parsing and virtual machine.
+- `probe`: WebAssembly disassembler, except it doesn't disassemble into WebAssembly text format.
 - `wasm4-fabric`: The Fabric mod that adds "WASM-4 Handheld Console" to Minecraft, along with WASM-4 runtime. Not available yet because the engine is not finished lol.
 
 ## License

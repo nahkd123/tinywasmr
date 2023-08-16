@@ -2,10 +2,10 @@ package tinywasmr.engine.module.section;
 
 public enum SectionType {
 	CUSTOM,
-	TYPE,
-	IMPORT,
-	FUNCTION,
-	TABLE,
+	TYPES,
+	IMPORTS,
+	FUNCTIONS,
+	TABLES,
 	MEMORY,
 	GLOBAL,
 	EXPORT,

@@ -4,6 +4,7 @@ plugins {
 }
 
 subprojects {
+    apply plugin: 'java-library'
     apply plugin: 'eclipse'
 
     eclipse {
