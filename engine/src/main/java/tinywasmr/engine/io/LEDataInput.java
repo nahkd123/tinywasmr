@@ -1,6 +1,8 @@
 package tinywasmr.engine.io;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p>
@@ -94,6 +96,13 @@ public interface LEDataInput {
 	default <T> void readVector(IOFunction<LEDataInput, T> producer, IOConsumer<T> consumer) throws IOException {
 		long length = readLEB128();
 		for (long i = 0; i < length; i++) consumer.consume(producer.apply(this));
+	}
+
+	default <T> List<T> readVector(IOFunction<LEDataInput, T> producer) throws IOException {
+		List<T> list = new ArrayList<>();
+		long length = readLEB128();
+		for (long i = 0; i < length; i++) list.add(producer.apply(this));
+		return list;
 	}
 
 	default char readUTF8Char() throws IOException {

@@ -6,8 +6,12 @@ import tinywasmr.engine.io.LEDataInput;
 import tinywasmr.engine.module.ModuleParser;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.section.Section;
+import tinywasmr.engine.module.type.Type;
 import tinywasmr.engine.module.v1.section.CustomSectionImpl;
+import tinywasmr.engine.module.v1.section.TypesSectionImpl;
 import tinywasmr.engine.module.v1.section.UnknownSectionImpl;
+import tinywasmr.engine.module.v1.type.FunctionTypeImpl;
+import tinywasmr.engine.module.v1.type.PrimitiveTypeImpl;
 
 public class ModuleParserImpl implements ModuleParser {
 	@Override
@@ -21,7 +25,7 @@ public class ModuleParserImpl implements ModuleParser {
 		return module;
 	}
 
-	private Section parseSection(LEDataInput in) throws IOException {
+	public Section parseSection(LEDataInput in) throws IOException {
 		var id = in.readByte();
 		if (id == -1) return null;
 
@@ -29,12 +33,36 @@ public class ModuleParserImpl implements ModuleParser {
 		return parseSection1(id, size, in);
 	}
 
+	// https://webassembly.github.io/spec/core/binary/modules.html#sections
 	private static final int SECTION_CUSTOM = 0x00;
+	private static final int SECTION_TYPES = 0x01;
 
-	private Section parseSection1(int id, int size, LEDataInput in) throws IOException {
+	public Section parseSection1(int id, int size, LEDataInput in) throws IOException {
 		return switch (id) {
 		case SECTION_CUSTOM -> new CustomSectionImpl(in);
+		case SECTION_TYPES -> new TypesSectionImpl(in, this);
 		default -> new UnknownSectionImpl(id, in.readBytes(size));
+		};
+	}
+
+	// https://webassembly.github.io/spec/core/binary/types.html#types
+	private static final int TYPE_I32 = 0x7F;
+	private static final int TYPE_I64 = 0x7E;
+	private static final int TYPE_F32 = 0x7D;
+	private static final int TYPE_F64 = 0x7C;
+	private static final int TYPE_V128 = 0x7B;
+	private static final int TYPE_FUNCTION = 0x60;
+
+	public Type parseType(LEDataInput in) throws IOException {
+		int id = in.readByte();
+		return switch (id) {
+		case TYPE_I32 -> PrimitiveTypeImpl.I32;
+		case TYPE_I64 -> PrimitiveTypeImpl.I64;
+		case TYPE_F32 -> PrimitiveTypeImpl.F32;
+		case TYPE_F64 -> PrimitiveTypeImpl.F64;
+		case TYPE_V128 -> PrimitiveTypeImpl.V128;
+		case TYPE_FUNCTION -> new FunctionTypeImpl(in.readVector(s -> parseType(s)), in.readVector(s -> parseType(s)));
+		default -> throw new IOException("Unknown type ID or unimplemented type ID: " + id);
 		};
 	}
 }
