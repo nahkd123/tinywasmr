@@ -7,6 +7,7 @@ import java.io.IOException;
 import tinywasmr.engine.io.LEDataInputStream;
 import tinywasmr.engine.module.ModuleParsers;
 import tinywasmr.engine.module.section.CustomSection;
+import tinywasmr.engine.module.section.FunctionsSection;
 import tinywasmr.engine.module.section.ImportsSection;
 import tinywasmr.engine.module.section.TypesSection;
 import tinywasmr.engine.module.section.UnknownSection;
@@ -35,9 +36,6 @@ public class Main {
 			System.out.println("//   Sections: " + module.getAllSections().size());
 
 			for (var section : module.getAllSections()) {
-				System.out.println();
-				System.out.println("// Section: " + section.getSectionType());
-
 				if (section instanceof UnknownSection unknownSection) {
 					System.out.println("section raw(" + unknownSection.getSectionBinaryId() + ") {");
 					System.out.println("  // Hex dump of section:");
@@ -54,19 +52,21 @@ public class Main {
 
 				if (section instanceof TypesSection typesSection) {
 					System.out.println("section types {");
-
-					for (int i = 0; i < typesSection.getTypes().size(); i++) {
-						var idStr = "0x" + padStringBefore(Integer.toString(i, 16), 8, "0");
-						var type = typesSection.getTypes().get(i);
-						System.out.println("  " + idStr + ": " + type);
-					}
-
+					for (int i = 0; i < typesSection.getTypes().size(); i++)
+						System.out.println("  " + i + ": " + typesSection.getTypes().get(i));
 					System.out.println("}");
 				}
 
 				if (section instanceof ImportsSection importsSection) {
 					System.out.println("section imports {");
 					for (var importEntry : importsSection.getImports()) System.out.println("  " + importEntry);
+					System.out.println("}");
+				}
+
+				if (section instanceof FunctionsSection functionsSection) {
+					System.out.println("section functions {");
+					for (int i = 0; i < functionsSection.getFunctions().size(); i++)
+						System.out.println("  " + i + ": " + functionsSection.getFunctions().get(i));
 					System.out.println("}");
 				}
 			}

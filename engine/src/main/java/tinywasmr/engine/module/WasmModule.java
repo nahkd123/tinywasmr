@@ -3,6 +3,7 @@ package tinywasmr.engine.module;
 import java.util.List;
 import java.util.Optional;
 
+import tinywasmr.engine.module.section.FunctionsSection;
 import tinywasmr.engine.module.section.ImportsSection;
 import tinywasmr.engine.module.section.Section;
 import tinywasmr.engine.module.section.SectionType;
@@ -23,5 +24,12 @@ public interface WasmModule {
 			.filter(v -> v.getSectionType() == SectionType.IMPORTS)
 			.findFirst()
 			.map(v -> (ImportsSection) v);
+	}
+
+	default Optional<FunctionsSection> getFunctionsSection() {
+		return getAllSections().stream()
+			.filter(v -> v.getSectionType() == SectionType.FUNCTIONS)
+			.findFirst()
+			.map(v -> (FunctionsSection) v);
 	}
 }

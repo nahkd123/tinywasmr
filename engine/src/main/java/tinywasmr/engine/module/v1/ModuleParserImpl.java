@@ -9,6 +9,7 @@ import tinywasmr.engine.module.section.Section;
 import tinywasmr.engine.module.type.Type;
 import tinywasmr.engine.module.v1.importing.FunctionImportImpl;
 import tinywasmr.engine.module.v1.section.CustomSectionImpl;
+import tinywasmr.engine.module.v1.section.FunctionsSectionImpl;
 import tinywasmr.engine.module.v1.section.ImportsSectionImpl;
 import tinywasmr.engine.module.v1.section.TypesSectionImpl;
 import tinywasmr.engine.module.v1.section.UnknownSectionImpl;
@@ -40,12 +41,14 @@ public class ModuleParserImpl implements ModuleParser {
 	private static final int SECTION_CUSTOM = 0x00;
 	private static final int SECTION_TYPES = 0x01;
 	private static final int SECTION_IMPORTS = 0x02;
+	private static final int SECTION_FUNCTIONS = 0x03;
 
 	public Section parseSection1(int id, int size, LEDataInput in) throws IOException {
 		return switch (id) {
 		case SECTION_CUSTOM -> new CustomSectionImpl(in, size);
 		case SECTION_TYPES -> new TypesSectionImpl(in, this);
 		case SECTION_IMPORTS -> new ImportsSectionImpl(in);
+		case SECTION_FUNCTIONS -> new FunctionsSectionImpl(in);
 		default -> new UnknownSectionImpl(id, in.readBytes(size));
 		};
 	}
@@ -78,6 +81,12 @@ public class ModuleParserImpl implements ModuleParser {
 				if (e instanceof FunctionImportImpl func) func.link(module);
 				// TODO
 			}
+		}
+
+		var functionsOpt = module.getFunctionsSection();
+		if (functionsOpt.isPresent()) {
+			for (var e : functionsOpt.get().getFunctions())
+				if (e instanceof FunctionImpl func) func.link(module);
 		}
 	}
 }
