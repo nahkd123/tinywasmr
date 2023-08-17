@@ -73,8 +73,10 @@ public class Main {
 
 				if (section instanceof FunctionsSection functionsSection) {
 					System.out.println("section functions {");
-					for (int i = 0; i < functionsSection.getFunctions().size(); i++)
-						System.out.println("  " + i + ": " + functionsSection.getFunctions().get(i));
+					for (int i = 0; i < functionsSection.getFunctions().size(); i++) {
+						int fid = i + module.getImportsSection().map(v -> v.getImports().size()).orElse(0);
+						System.out.println("  " + fid + ": " + functionsSection.getFunctions().get(i));
+					}
 					System.out.println("}");
 				}
 
@@ -96,8 +98,9 @@ public class Main {
 					var functions = codeSection.getFunctions();
 
 					for (int i = 0; i < functions.size(); i++) {
+						int fid = i + module.getImportsSection().map(v -> v.getImports().size()).orElse(0);
 						System.out.println(
-							"  " + i + ": " + module.getFunctionsSection().get().getFunctions().get(i) + " {");
+							"  " + fid + ": " + module.getFunctionsSection().get().getFunctions().get(i) + " {");
 
 						for (var local : functions.get(i).getLocals()) System.out.println("    (local " + local + ")");
 						printCode(functions.get(i).getInstructions(), "    ");
@@ -112,9 +115,15 @@ public class Main {
 	private static void printCode(List<Instruction> insn, String prefix) {
 		for (var e : insn) {
 			if (e instanceof BlockInstruction block) {
-				System.out.println(prefix + "block " + block.getLabel() + " {");
-				printCode(block.getContent(), prefix + "  ");
-				System.out.println(prefix + "}");
+				System.out.println(prefix + "block " + block.getReturnType().toString().toLowerCase() + " {");
+				printCode(block.getPrimaryBody(), prefix + "  ");
+				if (block.getSecondaryBody().isPresent()) {
+					System.out.println(prefix + "} or {");
+					printCode(block.getSecondaryBody().get(), prefix + "  ");
+					System.out.println(prefix + "}");
+				} else {
+					System.out.println(prefix + "}");
+				}
 			} else {
 				System.out.println(prefix + e.toString());
 			}

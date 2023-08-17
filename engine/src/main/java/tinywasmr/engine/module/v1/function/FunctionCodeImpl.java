@@ -26,7 +26,7 @@ public class FunctionCodeImpl implements FunctionCode {
 	public FunctionCodeImpl(List<Type> locals, LEDataInput in, long size) throws IOException {
 		var in2 = new LEDataInputWithCounter(in);
 		this.locals = locals;
-		this.instructions = Instructions.parse(in2);
+		this.instructions = Instructions.parse(in2, null);
 
 		var leftover = size - in2.getTotalBytesRead();
 		in.readBytes((int) leftover); // TODO should we store this somewhere?

@@ -31,7 +31,9 @@ public class FunctionImpl implements Function {
 			throw new LinkingException("Type is not function signature: " + type + " @ " + typeIndex + "");
 
 		linkedType = func;
-		linkedCode = codeSection.get().getFunctions().get(typeIndex);
+		linkedCode = codeSection.get()
+			.getFunctions()
+			.get(typeIndex - module.getImportsSection().get().getImports().size());
 	}
 
 	@Override

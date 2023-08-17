@@ -1,38 +1,33 @@
 package tinywasmr.engine.instruction.special;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import tinywasmr.engine.execution.context.ExecutionContext;
 import tinywasmr.engine.instruction.Instruction;
-import tinywasmr.engine.instruction.Instructions;
-import tinywasmr.engine.io.LEDataInput;
+import tinywasmr.engine.module.type.TypeEnum;
 
-public class BlockInstruction implements Instruction {
-	private List<Instruction> content;
-	private long label;
-
-	public BlockInstruction(long label, List<Instruction> content) {
-		this.label = label;
-		this.content = content;
-	}
-
-	public BlockInstruction(LEDataInput in) throws IOException {
-		label = in.readLEB128Unsigned();
-		content = Instructions.parse(in);
-	}
-
-	public long getLabel() { return label; }
-
+public interface BlockInstruction extends Instruction {
 	@Override
-	public void execute(ExecutionContext ctx) {
-		// TODO
+	default void execute(ExecutionContext ctx) {
+		throw new RuntimeException("Can't be executed directly, please use Executor");
 	}
 
-	public List<Instruction> getContent() { return content; }
+	public TypeEnum getReturnType(); // block returnType {...}
 
-	@Override
-	public String toString() {
-		return "block " + label + " { /* " + content.size() + " insns */ }"; // TODO
+	public Optional<List<Instruction>> getBodyBasedOnContext(ExecutionContext context);
+
+	public List<Instruction> getPrimaryBody();
+
+	public Optional<List<Instruction>> getSecondaryBody();
+
+	public static TypeEnum returnTypeFromBinaryId(int id) {
+		return switch (id) {
+		case 0x7F -> TypeEnum.I32;
+		case 0x7E -> TypeEnum.I64;
+		case 0x7D -> TypeEnum.F32;
+		case 0x7C -> TypeEnum.F64;
+		default -> TypeEnum.VOID;
+		};
 	}
 }

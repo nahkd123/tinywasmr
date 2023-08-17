@@ -18,6 +18,10 @@ public interface ExecutionContext {
 
 	public boolean isReturned();
 
+	public void setBranchOutDepth(int depth);
+
+	public int getBranchOutDepth();
+
 	default ValueHolder getLocalOrTrap(int pos) {
 		var locals = getLocals();
 		if (pos < 0 || pos >= locals.size()) throw new TrapException("Invalid local index " + pos);

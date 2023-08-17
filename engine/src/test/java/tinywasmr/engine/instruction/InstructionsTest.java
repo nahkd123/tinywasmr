@@ -15,7 +15,7 @@ class InstructionsTest {
 	void testParse() throws IOException {
 		var list = Instructions.parse(new LEByteBuffer(ByteBuffer.wrap(new byte[] {
 			0x00, 0x01, 0x02
-		})));
+		})), null);
 
 		assertEquals(LogicInstructions.UNREACHABLE, list.get(0));
 		assertEquals(LogicInstructions.NOP, list.get(1));

@@ -12,7 +12,8 @@ public class SimpleExecutionContext implements ExecutionContext {
 	private ModuleInstance instance;
 	private MachineStack stack = new StackBackedMachineStack();
 	private List<ValueHolder> locals;
-	private boolean isReturned;
+	private boolean isReturned = false;
+	private int branchOutDepth = 0;
 
 	public SimpleExecutionContext(ModuleInstance instance, LocalsBuilder locals) {
 		this.instance = instance;
@@ -35,4 +36,10 @@ public class SimpleExecutionContext implements ExecutionContext {
 
 	@Override
 	public boolean isReturned() { return isReturned; }
+
+	@Override
+	public int getBranchOutDepth() { return branchOutDepth; }
+
+	@Override
+	public void setBranchOutDepth(int branchOutDepth) { this.branchOutDepth = branchOutDepth; }
 }

@@ -5,11 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import tinywasmr.engine.execution.exception.TrapException;
 import tinywasmr.engine.instruction.impl.ConstInstructions;
 import tinywasmr.engine.instruction.impl.I32Instructions;
 import tinywasmr.engine.instruction.impl.LocalInstructions;
 import tinywasmr.engine.instruction.impl.LogicInstructions;
+import tinywasmr.engine.instruction.special.BlockInstruction;
+import tinywasmr.engine.instruction.special.IfBlockInstruction;
 import tinywasmr.engine.io.LEDataInput;
 import tinywasmr.engine.util.HexString;
 
@@ -39,7 +40,7 @@ public final class Instructions {
 		I32Instructions.bootstrap(Instructions::addFactory);
 	}
 
-	public static void parseAndConsume(LEDataInput in, Consumer<Instruction> consumer) throws IOException {
+	public static void parseAndConsume(LEDataInput in, BlockInstruction parent, Consumer<Instruction> consumer) throws IOException {
 		int instr;
 		Instruction lastInstr = null;
 
@@ -64,17 +65,25 @@ public final class Instructions {
 				if (hex.length() == 1) hex = "0" + hex;
 				hex += HexString.ofBytes(bonuses);
 
-				throw new TrapException("Unimplemented opcode: " + instr + " (0x" + Integer.toString(instr, 16) + "): "
+				throw new IOException("Unimplemented opcode: " + instr + " (0x" + Integer.toString(instr, 16) + "): "
 					+ hex);
 			}
 
 			consumer.accept(lastInstr);
+
+			if (lastInstr == LogicInstructions.ELSE) {
+				if (parent instanceof IfBlockInstruction ifBlock) {
+					ifBlock.setSecondary(Instructions.parse(in, ifBlock));
+				} else throw new IOException("Illegal else opcode");
+
+				return;
+			}
 		} while (lastInstr != LogicInstructions.END);
 	}
 
-	public static List<Instruction> parse(LEDataInput in) throws IOException {
+	public static List<Instruction> parse(LEDataInput in, BlockInstruction parent) throws IOException {
 		var list = new ArrayList<Instruction>();
-		parseAndConsume(in, list::add);
+		parseAndConsume(in, parent, list::add);
 		return list;
 	}
 }
