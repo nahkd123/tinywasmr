@@ -12,6 +12,8 @@ import tinywasmr.engine.execution.value.ValueHolder;
 public class StackBackedMachineStack implements MachineStack {
 	private Stack<ValueHolder> backed = new Stack<>();
 
+	public Stack<ValueHolder> getBacked() { return backed; }
+
 	@Override
 	public void pushI32(int v) {
 		backed.push(new I32ValueHolder(v));

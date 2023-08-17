@@ -4,3 +4,4 @@ plugins {
 
 include 'engine'
 include 'probe'
+include 'trace'

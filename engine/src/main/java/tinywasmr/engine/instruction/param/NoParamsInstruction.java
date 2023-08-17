@@ -3,7 +3,7 @@ package tinywasmr.engine.instruction.param;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-import tinywasmr.engine.execution.ExecutionContext;
+import tinywasmr.engine.execution.context.ExecutionContext;
 import tinywasmr.engine.instruction.FixedOpcodeInstructionFactory;
 import tinywasmr.engine.instruction.Instruction;
 import tinywasmr.engine.io.LEDataInput;

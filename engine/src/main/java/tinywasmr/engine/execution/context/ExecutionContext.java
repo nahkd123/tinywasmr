@@ -1,17 +1,22 @@
-package tinywasmr.engine.execution;
+package tinywasmr.engine.execution.context;
 
 import java.util.List;
 
+import tinywasmr.engine.execution.ModuleInstance;
 import tinywasmr.engine.execution.exception.TrapException;
 import tinywasmr.engine.execution.stack.MachineStack;
 import tinywasmr.engine.execution.value.ValueHolder;
 
 public interface ExecutionContext {
+	public ModuleInstance getInstance();
+
 	public MachineStack getStack();
 
 	public List<ValueHolder> getLocals();
 
 	public void triggerReturn();
+
+	public boolean isReturned();
 
 	default ValueHolder getLocalOrTrap(int pos) {
 		var locals = getLocals();
