@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import tinywasmr.engine.instruction.Instructions;
 import tinywasmr.engine.io.LEDataInputStream;
 import tinywasmr.engine.module.ModuleParsers;
+import tinywasmr.engine.module.section.CodeSection;
 import tinywasmr.engine.module.section.CustomSection;
 import tinywasmr.engine.module.section.FunctionsSection;
 import tinywasmr.engine.module.section.ImportsSection;
@@ -26,6 +28,8 @@ public class Main {
 			System.err.println("File does not exists!");
 			System.exit(1);
 		}
+
+		System.err.println("Loaded " + Instructions.getTotalFactories() + " instruction factories");
 
 		try (var inStream = new FileInputStream(file)) {
 			var in = new LEDataInputStream(inStream);
@@ -81,6 +85,19 @@ public class Main {
 								: "at least " + size.getMin()));
 					}
 
+					System.out.println("}");
+				}
+
+				if (section instanceof CodeSection codeSection) {
+					System.out.println("section code {");
+					for (int i = 0; i < codeSection.getFunctions().size(); i++) {
+						System.out
+							.println("  " + i + ": " + module.getFunctionsSection().get().getFunctions().get(i) + " {");
+						for (var instr : codeSection.getFunctions().get(i).getInstructions()) {
+							System.out.println("    " + instr);
+						}
+						System.out.println("  }");
+					}
 					System.out.println("}");
 				}
 			}

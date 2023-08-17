@@ -2,7 +2,7 @@ package tinywasmr.engine.module.section;
 
 import java.util.List;
 
-import tinywasmr.engine.module.Function;
+import tinywasmr.engine.module.function.Function;
 
 public interface FunctionsSection extends Section {
 	@Override

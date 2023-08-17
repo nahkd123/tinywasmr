@@ -7,7 +7,9 @@ import tinywasmr.engine.module.ModuleParser;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.section.Section;
 import tinywasmr.engine.module.type.Type;
+import tinywasmr.engine.module.v1.function.FunctionImpl;
 import tinywasmr.engine.module.v1.importing.FunctionImportImpl;
+import tinywasmr.engine.module.v1.section.CodeSectionImpl;
 import tinywasmr.engine.module.v1.section.CustomSectionImpl;
 import tinywasmr.engine.module.v1.section.FunctionsSectionImpl;
 import tinywasmr.engine.module.v1.section.ImportsSectionImpl;
@@ -45,6 +47,8 @@ public class ModuleParserImpl implements ModuleParser {
 	private static final int SECTION_FUNCTIONS = 0x03;
 	// TODO table
 	private static final int SECTION_MEMORY = 0x05;
+	// TODO
+	private static final int SECTION_CODE = 0x0A;
 
 	public Section parseSection1(int id, int size, LEDataInput in) throws IOException {
 		return switch (id) {
@@ -53,6 +57,7 @@ public class ModuleParserImpl implements ModuleParser {
 		case SECTION_IMPORTS -> new ImportsSectionImpl(in);
 		case SECTION_FUNCTIONS -> new FunctionsSectionImpl(in);
 		case SECTION_MEMORY -> new MemorySectionImpl(in);
+		case SECTION_CODE -> new CodeSectionImpl(in, this);
 		default -> new UnknownSectionImpl(id, in.readBytes(size));
 		};
 	}

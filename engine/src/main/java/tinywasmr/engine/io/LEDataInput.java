@@ -23,6 +23,8 @@ public interface LEDataInput {
 	public int readByte() throws IOException;
 
 	default int readBytesTo(byte[] buffer, int offsetInBuffer, int length) throws IOException {
+		if (length == 0) return 0;
+
 		int v = readByte();
 		if (v == -1) return -1;
 		buffer[offsetInBuffer++] = (byte) v;

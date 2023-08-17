@@ -1,9 +1,9 @@
-package tinywasmr.engine.module;
+package tinywasmr.engine.module.function;
 
 import tinywasmr.engine.module.type.FunctionType;
 
 public interface Function {
 	public FunctionType getSignature();
 
-	// TODO add call method here when we reach to vm part
+	public FunctionCode getCode();
 }

@@ -1,26 +1,69 @@
 package tinywasmr.engine.instruction;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+import tinywasmr.engine.execution.exception.TrapException;
+import tinywasmr.engine.instruction.impl.I32OpInstructions;
+import tinywasmr.engine.instruction.impl.LocalInstructions;
+import tinywasmr.engine.instruction.impl.LogicInstructions;
+import tinywasmr.engine.io.LEDataInput;
+
 public final class Instructions {
+	private static final FixedOpcodeInstructionFactory[] FIXED_OPCODE_FACTORIES = new FixedOpcodeInstructionFactory[256];
+	private static final List<InstructionFactory> DYNAMIC_FACTORIES = new ArrayList<>();
+	private static int fixedOpcodeFactories = 0;
+
+	public static <T extends InstructionFactory> T addFactory(T factory) {
+		if (factory instanceof FixedOpcodeInstructionFactory foif) {
+			FIXED_OPCODE_FACTORIES[foif.getOpcode()] = foif;
+			fixedOpcodeFactories++;
+		} else {
+			DYNAMIC_FACTORIES.add(factory);
+		}
+
+		return factory;
+	}
+
+	public static int getTotalFactories() { return fixedOpcodeFactories + DYNAMIC_FACTORIES.size(); }
+
 	// https://webassembly.github.io/spec/core/appendix/index-instructions.html
+	static {
+		LogicInstructions.bootstrap(Instructions::addFactory);
+		LocalInstructions.bootstrap(Instructions::addFactory);
+		I32OpInstructions.bootstrap(Instructions::addFactory);
+	}
 
-	public static final int UNREACHABLE = 0x00;
-	public static final int NOP = 0x01;
-	public static final int END = 0x0B;
+	public static void parseAndConsume(LEDataInput in, Consumer<Instruction> consumer) throws IOException {
+		int instr;
+		Instruction lastInstr = null;
 
-	public static final int RETURN = 0x0F;
+		do {
+			lastInstr = null;
 
-	public static final int DROP = 0x1A;
+			instr = in.readByte();
+			if (instr == -1) return;
+			var factory = FIXED_OPCODE_FACTORIES[instr];
+			if (factory != null) lastInstr = factory.parse(instr, in);
+			else {
+				for (var dynamicFactory : DYNAMIC_FACTORIES) {
+					lastInstr = dynamicFactory.parse(instr, in);
+					if (lastInstr != null) break;
+				}
+			}
 
-	public static final int LOCAL_GET = 0x20;
-	public static final int LOCAL_SET = 0x21;
-	public static final int LOCAL_TEE = 0x22;
+			if (lastInstr == null) throw new TrapException("Unimplemented opcode: " + instr + " (0x"
+				+ Integer.toString(instr, 16) + ")");
 
-	public static final int I32_CONST = 0x41;
-	public static final int I64_CONST = 0x42;
-	public static final int F32_CONST = 0x43;
-	public static final int F64_CONST = 0x44;
+			consumer.accept(lastInstr);
+		} while (lastInstr != LogicInstructions.END);
+	}
 
-	public static final int I32_ADD = 0x6A;
-
-	public static final int F32_ADD = 0x92;
+	public static List<Instruction> parse(LEDataInput in) throws IOException {
+		var list = new ArrayList<Instruction>();
+		parseAndConsume(in, list::add);
+		return list;
+	}
 }

@@ -6,9 +6,9 @@ import java.util.Collections;
 import java.util.List;
 
 import tinywasmr.engine.io.LEDataInput;
-import tinywasmr.engine.module.Function;
+import tinywasmr.engine.module.function.Function;
 import tinywasmr.engine.module.section.FunctionsSection;
-import tinywasmr.engine.module.v1.FunctionImpl;
+import tinywasmr.engine.module.v1.function.FunctionImpl;
 
 public class FunctionsSectionImpl implements FunctionsSection {
 	private List<Function> functions;
