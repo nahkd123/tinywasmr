@@ -21,14 +21,21 @@ public class VirtualMachineImpl implements VirtualMachine {
 		int instr;
 		int i32a, i32b; // "registers"
 		long i64a, i64b;
+		float f32a, f32b;
 		ValueHolder frame;
 
 		while ((instr = code.readByte()) != -1) {
 			switch (instr) {
+
 			case Instructions.NOP:
 				continue;
 			case Instructions.UNREACHABLE:
 				throw new TrapException("Unreachable");
+			case Instructions.DROP:
+				stack.pop();
+				break;
+
+			case Instructions.END:
 			case Instructions.RETURN:
 				// TODO return
 				return;
@@ -57,12 +64,25 @@ public class VirtualMachineImpl implements VirtualMachine {
 			case Instructions.I64_CONST:
 				stack.pushI64(code.readLEB128());
 				break;
+			case Instructions.F32_CONST:
+				stack.pushF32(code.readF32());
+				break;
+			case Instructions.F64_CONST:
+				stack.pushF64(code.readF64());
+				break;
 
 			case Instructions.I32_ADD:
 				i32b = stack.popI32();
 				i32a = stack.popI32();
 				stack.pushI32(i32a + i32b);
 				break;
+
+			case Instructions.F32_ADD:
+				f32b = stack.popF32();
+				f32a = stack.popF32();
+				stack.pushF32(f32a + f32b);
+				break;
+
 			default:
 				throw new TrapException("Unimplemented opcode: " + instr + " (Hex 0x" + Integer.toString(instr, 16)
 					+ ")");
