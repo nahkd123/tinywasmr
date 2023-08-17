@@ -40,4 +40,9 @@ public final class F64ValueHolder implements ValueHolder {
 	public void copyTo(ValueHolder holder) {
 		holder.setF64(v);
 	}
+
+	@Override
+	public String toString() {
+		return "f64<" + v + ">";
+	}
 }

@@ -40,4 +40,9 @@ public final class I64ValueHolder implements ValueHolder {
 	public void copyTo(ValueHolder holder) {
 		holder.setI64(v);
 	}
+
+	@Override
+	public String toString() {
+		return "i64<" + v + ">";
+	}
 }

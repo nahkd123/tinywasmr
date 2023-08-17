@@ -9,7 +9,7 @@ import tinywasmr.engine.instruction.Instruction;
 import tinywasmr.engine.instruction.special.BlockInstruction;
 
 public class Executor {
-	private static class StackEntry {
+	public static class StackEntry {
 		private List<Instruction> code;
 		private int pointer;
 
@@ -21,6 +21,10 @@ public class Executor {
 		public Instruction getCurrent() { return code.get(pointer); }
 
 		public boolean isDone() { return pointer >= code.size(); }
+
+		public List<Instruction> getCode() { return code; }
+
+		public int getPointer() { return pointer; }
 	}
 
 	private Stack<StackEntry> entries = new Stack<>();
@@ -42,8 +46,6 @@ public class Executor {
 		if (entries.isEmpty()) return true;
 
 		var insn = tail.getCurrent();
-		tail.pointer++;
-
 		if (insn instanceof BlockInstruction block) {
 			var body = block.getBodyBasedOnContext(context);
 			if (body.isEmpty()) return false; // continue
@@ -64,11 +66,15 @@ public class Executor {
 			}
 		}
 
+		tail.pointer++;
+
 		if (tail.isDone()) {
 			entries.pop();
-			return true;
+			if (entries.isEmpty()) return true;
 		}
 
 		return false;
 	}
+
+	public Stack<StackEntry> getStackEntries() { return entries; }
 }

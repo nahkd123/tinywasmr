@@ -40,4 +40,9 @@ public final class I32ValueHolder implements ValueHolder {
 	public void copyTo(ValueHolder holder) {
 		holder.setI32(v);
 	}
+
+	@Override
+	public String toString() {
+		return "i32<" + v + ">";
+	}
 }

@@ -40,4 +40,9 @@ public final class F32ValueHolder implements ValueHolder {
 	public void copyTo(ValueHolder holder) {
 		holder.setF32(v);
 	}
+
+	@Override
+	public String toString() {
+		return "f32<" + v + ">";
+	}
 }

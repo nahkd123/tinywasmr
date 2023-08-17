@@ -33,7 +33,7 @@ public class FunctionImpl implements Function {
 		linkedType = func;
 		linkedCode = codeSection.get()
 			.getFunctions()
-			.get(typeIndex - module.getImportsSection().get().getImports().size());
+			.get(typeIndex - module.getImportsSection().map(v -> v.getImports().size()).orElse(0));
 	}
 
 	@Override
