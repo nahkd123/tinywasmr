@@ -15,10 +15,10 @@ public class CustomSectionImpl implements CustomSection {
 		this.content = content;
 	}
 
-	public CustomSectionImpl(LEDataInput in) throws IOException {
+	public CustomSectionImpl(LEDataInput in, int size) throws IOException {
 		var nameWithLength = LEDataInputWithCounter.countBytes(in, s -> s.readUTF8());
 		this.name = nameWithLength.getB();
-		this.content = in.readBytes(nameWithLength.getA());
+		this.content = in.readBytes(size - nameWithLength.getA());
 	}
 
 	@Override

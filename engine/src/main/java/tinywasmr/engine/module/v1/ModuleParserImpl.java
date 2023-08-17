@@ -7,7 +7,9 @@ import tinywasmr.engine.module.ModuleParser;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.section.Section;
 import tinywasmr.engine.module.type.Type;
+import tinywasmr.engine.module.v1.importing.FunctionImportImpl;
 import tinywasmr.engine.module.v1.section.CustomSectionImpl;
+import tinywasmr.engine.module.v1.section.ImportsSectionImpl;
 import tinywasmr.engine.module.v1.section.TypesSectionImpl;
 import tinywasmr.engine.module.v1.section.UnknownSectionImpl;
 import tinywasmr.engine.module.v1.type.FunctionTypeImpl;
@@ -22,6 +24,7 @@ public class ModuleParserImpl implements ModuleParser {
 		var module = new WasmModuleImpl();
 		Section section;
 		while ((section = parseSection(in)) != null) module.getModifiableSectionsList().add(section);
+		linkModule(module);
 		return module;
 	}
 
@@ -36,11 +39,13 @@ public class ModuleParserImpl implements ModuleParser {
 	// https://webassembly.github.io/spec/core/binary/modules.html#sections
 	private static final int SECTION_CUSTOM = 0x00;
 	private static final int SECTION_TYPES = 0x01;
+	private static final int SECTION_IMPORTS = 0x02;
 
 	public Section parseSection1(int id, int size, LEDataInput in) throws IOException {
 		return switch (id) {
-		case SECTION_CUSTOM -> new CustomSectionImpl(in);
+		case SECTION_CUSTOM -> new CustomSectionImpl(in, size);
 		case SECTION_TYPES -> new TypesSectionImpl(in, this);
+		case SECTION_IMPORTS -> new ImportsSectionImpl(in);
 		default -> new UnknownSectionImpl(id, in.readBytes(size));
 		};
 	}
@@ -64,5 +69,15 @@ public class ModuleParserImpl implements ModuleParser {
 		case TYPE_FUNCTION -> new FunctionTypeImpl(in.readVector(s -> parseType(s)), in.readVector(s -> parseType(s)));
 		default -> throw new IOException("Unknown type ID or unimplemented type ID: " + id);
 		};
+	}
+
+	private void linkModule(WasmModuleImpl module) {
+		var importsOpt = module.getImportsSection();
+		if (importsOpt.isPresent()) {
+			for (var e : importsOpt.get().getImports()) {
+				if (e instanceof FunctionImportImpl func) func.link(module);
+				// TODO
+			}
+		}
 	}
 }

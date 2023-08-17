@@ -7,6 +7,7 @@ import java.io.IOException;
 import tinywasmr.engine.io.LEDataInputStream;
 import tinywasmr.engine.module.ModuleParsers;
 import tinywasmr.engine.module.section.CustomSection;
+import tinywasmr.engine.module.section.ImportsSection;
 import tinywasmr.engine.module.section.TypesSection;
 import tinywasmr.engine.module.section.UnknownSection;
 import tinywasmr.engine.util.HexString;
@@ -60,6 +61,12 @@ public class Main {
 						System.out.println("  " + idStr + ": " + type);
 					}
 
+					System.out.println("}");
+				}
+
+				if (section instanceof ImportsSection importsSection) {
+					System.out.println("section imports {");
+					for (var importEntry : importsSection.getImports()) System.out.println("  " + importEntry);
 					System.out.println("}");
 				}
 			}
