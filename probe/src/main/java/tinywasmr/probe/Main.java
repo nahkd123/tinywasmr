@@ -9,6 +9,7 @@ import tinywasmr.engine.module.ModuleParsers;
 import tinywasmr.engine.module.section.CustomSection;
 import tinywasmr.engine.module.section.FunctionsSection;
 import tinywasmr.engine.module.section.ImportsSection;
+import tinywasmr.engine.module.section.MemorySection;
 import tinywasmr.engine.module.section.TypesSection;
 import tinywasmr.engine.module.section.UnknownSection;
 import tinywasmr.engine.util.HexString;
@@ -67,6 +68,19 @@ public class Main {
 					System.out.println("section functions {");
 					for (int i = 0; i < functionsSection.getFunctions().size(); i++)
 						System.out.println("  " + i + ": " + functionsSection.getFunctions().get(i));
+					System.out.println("}");
+				}
+
+				if (section instanceof MemorySection memorySection) {
+					System.out.println("section memory {");
+
+					for (int i = 0; i < memorySection.getMemorySizes().size(); i++) {
+						var size = memorySection.getMemorySizes().get(i);
+						System.out.println(
+							"  " + i + ": " + (size.hasMax() ? ("from " + size.getMin() + " to " + size.getMax())
+								: "at least " + size.getMin()));
+					}
+
 					System.out.println("}");
 				}
 			}

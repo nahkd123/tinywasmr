@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import tinywasmr.engine.type.Limit;
+
 /**
  * <p>
  * WebAssembly only have little endian mode, so we need to read all values in
@@ -142,5 +144,16 @@ public interface LEDataInput {
 		char[] cs = new char[(int) readLEB128()];
 		for (int i = 0; i < cs.length; i++) cs[i] = readUTF8Char();
 		return String.valueOf(cs);
+	}
+
+	default Limit readLimit() throws IOException {
+		int head = readByte();
+		if (head == -1) throw new IOException("End of stream");
+
+		long min = readLEB128();
+		if (head == 0x00) return Limit.min(min);
+
+		long max = readLEB128();
+		return Limit.max(min, max);
 	}
 }
