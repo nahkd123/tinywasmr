@@ -32,4 +32,7 @@ public class StandardBlockInstruction implements BlockInstruction {
 
 	@Override
 	public Optional<List<Instruction>> getSecondaryBody() { return Optional.empty(); }
+
+	@Override
+	public String getBlockName() { return "block"; }
 }

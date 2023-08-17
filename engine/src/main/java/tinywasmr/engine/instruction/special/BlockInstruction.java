@@ -21,6 +21,8 @@ public interface BlockInstruction extends Instruction {
 
 	public Optional<List<Instruction>> getSecondaryBody();
 
+	public String getBlockName();
+
 	public static TypeEnum returnTypeFromBinaryId(int id) {
 		return switch (id) {
 		case 0x7F -> TypeEnum.I32;

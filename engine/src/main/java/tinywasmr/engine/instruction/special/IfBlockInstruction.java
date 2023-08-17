@@ -28,4 +28,7 @@ public class IfBlockInstruction extends StandardBlockInstruction {
 	}
 
 	public void setSecondary(List<Instruction> secondary) { this.secondary = secondary; }
+
+	@Override
+	public String getBlockName() { return "if"; }
 }

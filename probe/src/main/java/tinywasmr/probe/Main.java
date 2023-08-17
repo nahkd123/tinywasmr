@@ -115,7 +115,8 @@ public class Main {
 	private static void printCode(List<Instruction> insn, String prefix) {
 		for (var e : insn) {
 			if (e instanceof BlockInstruction block) {
-				System.out.println(prefix + "block " + block.getReturnType().toString().toLowerCase() + " {");
+				System.out.println(
+					prefix + block.getBlockName() + " " + block.getReturnType().toString().toLowerCase() + " {");
 				printCode(block.getPrimaryBody(), prefix + "  ");
 				if (block.getSecondaryBody().isPresent()) {
 					System.out.println(prefix + "} or {");
