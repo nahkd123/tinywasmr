@@ -18,9 +18,9 @@ public class FunctionsSectionImpl implements FunctionsSection {
 	}
 
 	public FunctionsSectionImpl(LEDataInput in) throws IOException {
-		long count = in.readLEB128();
+		long count = in.readLEB128Unsigned();
 		functions = new ArrayList<>();
-		for (int i = 0; i < count; i++) functions.add(new FunctionImpl((int) in.readLEB128()));
+		for (int i = 0; i < count; i++) functions.add(new FunctionImpl((int) in.readLEB128Unsigned()));
 	}
 
 	@Override

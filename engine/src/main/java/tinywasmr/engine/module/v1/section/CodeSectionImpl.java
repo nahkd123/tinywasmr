@@ -21,18 +21,18 @@ public class CodeSectionImpl implements CodeSection {
 	}
 
 	public CodeSectionImpl(LEDataInput in, ModuleParserImpl parser) throws IOException {
-		long count = in.readLEB128();
+		long count = in.readLEB128Unsigned();
 		functions = new ArrayList<>();
 
 		for (int i = 0; i < count; i++) {
-			long functionSize = in.readLEB128();
+			long functionSize = in.readLEB128Unsigned();
 
 			var in2 = new LEDataInputWithCounter(in);
-			long localBlocks = in2.readLEB128();
+			long localBlocks = in2.readLEB128Unsigned();
 			List<Type> locals = new ArrayList<>();
 
 			for (int j = 0; j < localBlocks; j++) {
-				long n = in2.readLEB128();
+				long n = in2.readLEB128Unsigned();
 				Type localType = parser.parseType(in2);
 				for (int k = 0; k < n; k++) locals.add(localType);
 			}

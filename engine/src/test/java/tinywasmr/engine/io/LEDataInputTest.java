@@ -44,9 +44,9 @@ class LEDataInputTest {
 			}
 		};
 
-		assertEquals(0L, io.readLEB128());
-		assertEquals(0x42L, io.readLEB128());
-		assertEquals(0b10011000011101100101L, io.readLEB128());
+		assertEquals(0L, io.readLEB128Unsigned());
+		assertEquals(0x42L, io.readLEB128Unsigned());
+		assertEquals(0b10011000011101100101L, io.readLEB128Unsigned());
 	}
 
 	@Test

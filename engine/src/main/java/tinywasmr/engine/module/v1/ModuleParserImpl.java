@@ -36,7 +36,7 @@ public class ModuleParserImpl implements ModuleParser {
 		var id = in.readByte();
 		if (id == -1) return null;
 
-		var size = (int) in.readLEB128();
+		var size = (int) in.readLEB128Unsigned();
 		return parseSection1(id, size, in);
 	}
 

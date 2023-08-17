@@ -21,7 +21,7 @@ public class ImportsSectionImpl implements ImportsSection {
 	}
 
 	public ImportsSectionImpl(LEDataInput in) throws IOException {
-		long count = in.readLEB128();
+		long count = in.readLEB128Unsigned();
 		imports = new ArrayList<>();
 
 		for (int i = 0; i < count; i++) {
@@ -32,7 +32,7 @@ public class ImportsSectionImpl implements ImportsSection {
 
 			switch (descId) {
 			case DESC_FUNCTION:
-				idx = (int) in.readLEB128();
+				idx = (int) in.readLEB128Unsigned();
 				imports.add(new FunctionImportImpl(module, name, idx));
 				break;
 			default:

@@ -7,7 +7,7 @@ import tinywasmr.engine.instruction.FixedOpcodeInstructionFactory;
 import tinywasmr.engine.instruction.Instruction;
 import tinywasmr.engine.io.LEDataInput;
 
-public class I32InstructionFactory implements FixedOpcodeInstructionFactory {
+public class U32InstructionFactory implements FixedOpcodeInstructionFactory {
 	@FunctionalInterface
 	public static interface I32Executor {
 		public void execute(int i32a, ExecutionContext ctx);
@@ -39,7 +39,7 @@ public class I32InstructionFactory implements FixedOpcodeInstructionFactory {
 	private String name;
 	private I32Executor executor;
 
-	public I32InstructionFactory(int opcode, String name, I32Executor executor) {
+	public U32InstructionFactory(int opcode, String name, I32Executor executor) {
 		this.opcode = opcode;
 		this.name = name;
 		this.executor = executor;
@@ -50,7 +50,7 @@ public class I32InstructionFactory implements FixedOpcodeInstructionFactory {
 
 	@Override
 	public Instruction parse(LEDataInput in) throws IOException {
-		return new I32Instruction((int) in.readLEB128(), name, executor);
+		return new I32Instruction((int) in.readLEB128Unsigned(), name, executor);
 	}
 
 	public Instruction create(int i32a) {

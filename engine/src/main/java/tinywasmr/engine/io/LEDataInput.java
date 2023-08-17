@@ -82,7 +82,7 @@ public interface LEDataInput {
 		return Double.longBitsToDouble(readI64());
 	}
 
-	default long readLEB128() throws IOException {
+	default long readLEB128Unsigned() throws IOException {
 		long v = 0, shift = 0;
 		int b;
 
@@ -97,14 +97,31 @@ public interface LEDataInput {
 		return v;
 	}
 
+	default long readLEB128Signed(int bitsSize) throws IOException {
+		long v = 0, shift = 0;
+		int b;
+
+		do {
+			b = readByte();
+			if (b == -1) return v;
+			v |= (b & 0x7FL) << shift;
+		} while ((v & 0x80) != 0);
+
+		if ((shift < bitsSize) && (b & 0x40) != 0) {
+			return v | (~0 << shift);
+		} else {
+			return v;
+		}
+	}
+
 	default <T> void readVector(IOFunction<LEDataInput, T> producer, IOConsumer<T> consumer) throws IOException {
-		long length = readLEB128();
+		long length = readLEB128Unsigned();
 		for (long i = 0; i < length; i++) consumer.consume(producer.apply(this));
 	}
 
 	default <T> List<T> readVector(IOFunction<LEDataInput, T> producer) throws IOException {
 		List<T> list = new ArrayList<>();
-		long length = readLEB128();
+		long length = readLEB128Unsigned();
 		for (long i = 0; i < length; i++) list.add(producer.apply(this));
 		return list;
 	}
@@ -143,7 +160,7 @@ public interface LEDataInput {
 	}
 
 	default String readUTF8() throws IOException {
-		char[] cs = new char[(int) readLEB128()];
+		char[] cs = new char[(int) readLEB128Unsigned()];
 		for (int i = 0; i < cs.length; i++) cs[i] = readUTF8Char();
 		return String.valueOf(cs);
 	}
@@ -152,10 +169,10 @@ public interface LEDataInput {
 		int head = readByte();
 		if (head == -1) throw new IOException("End of stream");
 
-		long min = readLEB128();
+		long min = readLEB128Unsigned();
 		if (head == 0x00) return Limit.min(min);
 
-		long max = readLEB128();
+		long max = readLEB128Unsigned();
 		return Limit.max(min, max);
 	}
 }

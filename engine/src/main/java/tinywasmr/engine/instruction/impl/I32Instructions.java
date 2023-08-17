@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 import tinywasmr.engine.instruction.InstructionFactory;
 import tinywasmr.engine.instruction.param.NoParamsInstruction;
 
-public class I32OpInstructions {
+public class I32Instructions {
 	@FunctionalInterface
 	private static interface Int2IntFunction {
 		public int apply(int v);

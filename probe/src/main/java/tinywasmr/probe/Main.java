@@ -3,8 +3,11 @@ package tinywasmr.probe;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 
+import tinywasmr.engine.instruction.Instruction;
 import tinywasmr.engine.instruction.Instructions;
+import tinywasmr.engine.instruction.special.BlockInstruction;
 import tinywasmr.engine.io.LEDataInputStream;
 import tinywasmr.engine.module.ModuleParsers;
 import tinywasmr.engine.module.section.CodeSection;
@@ -97,11 +100,23 @@ public class Main {
 							"  " + i + ": " + module.getFunctionsSection().get().getFunctions().get(i) + " {");
 
 						for (var local : functions.get(i).getLocals()) System.out.println("    (local " + local + ")");
-						for (var instr : functions.get(i).getInstructions()) System.out.println("    " + instr);
+						printCode(functions.get(i).getInstructions(), "    ");
 						System.out.println("  }");
 					}
 					System.out.println("}");
 				}
+			}
+		}
+	}
+
+	private static void printCode(List<Instruction> insn, String prefix) {
+		for (var e : insn) {
+			if (e instanceof BlockInstruction block) {
+				System.out.println(prefix + "block " + block.getLabel() + " {");
+				printCode(block.getContent(), prefix + "  ");
+				System.out.println(prefix + "}");
+			} else {
+				System.out.println(prefix + e.toString());
 			}
 		}
 	}

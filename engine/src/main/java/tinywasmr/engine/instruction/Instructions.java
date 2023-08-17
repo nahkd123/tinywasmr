@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import tinywasmr.engine.execution.exception.TrapException;
-import tinywasmr.engine.instruction.impl.I32OpInstructions;
+import tinywasmr.engine.instruction.impl.ConstInstructions;
+import tinywasmr.engine.instruction.impl.I32Instructions;
 import tinywasmr.engine.instruction.impl.LocalInstructions;
 import tinywasmr.engine.instruction.impl.LogicInstructions;
 import tinywasmr.engine.io.LEDataInput;
+import tinywasmr.engine.util.HexString;
 
 public final class Instructions {
 	private static final FixedOpcodeInstructionFactory[] FIXED_OPCODE_FACTORIES = new FixedOpcodeInstructionFactory[256];
@@ -33,7 +35,8 @@ public final class Instructions {
 	static {
 		LogicInstructions.bootstrap(Instructions::addFactory);
 		LocalInstructions.bootstrap(Instructions::addFactory);
-		I32OpInstructions.bootstrap(Instructions::addFactory);
+		ConstInstructions.bootstrap(Instructions::addFactory);
+		I32Instructions.bootstrap(Instructions::addFactory);
 	}
 
 	public static void parseAndConsume(LEDataInput in, Consumer<Instruction> consumer) throws IOException {
@@ -54,8 +57,16 @@ public final class Instructions {
 				}
 			}
 
-			if (lastInstr == null) throw new TrapException("Unimplemented opcode: " + instr + " (0x"
-				+ Integer.toString(instr, 16) + ")");
+			if (lastInstr == null) {
+				// View 7 more bytes for context
+				var bonuses = in.readBytes(7);
+				var hex = Integer.toString(instr, 16);
+				if (hex.length() == 1) hex = "0" + hex;
+				hex += HexString.ofBytes(bonuses);
+
+				throw new TrapException("Unimplemented opcode: " + instr + " (0x" + Integer.toString(instr, 16) + "): "
+					+ hex);
+			}
 
 			consumer.accept(lastInstr);
 		} while (lastInstr != LogicInstructions.END);

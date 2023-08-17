@@ -18,7 +18,7 @@ public class TypesSectionImpl implements TypesSection {
 	}
 
 	public TypesSectionImpl(LEDataInput in, ModuleParserImpl parser) throws IOException {
-		long count = in.readLEB128();
+		long count = in.readLEB128Unsigned();
 		types = new ArrayList<>();
 		for (int i = 0; i < count; i++) types.add(parser.parseType(in));
 	}

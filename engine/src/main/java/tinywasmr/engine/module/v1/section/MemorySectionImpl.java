@@ -17,7 +17,7 @@ public class MemorySectionImpl implements MemorySection {
 	}
 
 	public MemorySectionImpl(LEDataInput in) throws IOException {
-		long count = in.readLEB128();
+		long count = in.readLEB128Unsigned();
 		memorySizes = new ArrayList<>();
 		for (int i = 0; i < count; i++) memorySizes.add(in.readLimit());
 	}
