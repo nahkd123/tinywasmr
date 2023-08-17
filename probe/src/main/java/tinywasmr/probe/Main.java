@@ -90,12 +90,14 @@ public class Main {
 
 				if (section instanceof CodeSection codeSection) {
 					System.out.println("section code {");
-					for (int i = 0; i < codeSection.getFunctions().size(); i++) {
-						System.out
-							.println("  " + i + ": " + module.getFunctionsSection().get().getFunctions().get(i) + " {");
-						for (var instr : codeSection.getFunctions().get(i).getInstructions()) {
-							System.out.println("    " + instr);
-						}
+					var functions = codeSection.getFunctions();
+
+					for (int i = 0; i < functions.size(); i++) {
+						System.out.println(
+							"  " + i + ": " + module.getFunctionsSection().get().getFunctions().get(i) + " {");
+
+						for (var local : functions.get(i).getLocals()) System.out.println("    (local " + local + ")");
+						for (var instr : functions.get(i).getInstructions()) System.out.println("    " + instr);
 						System.out.println("  }");
 					}
 					System.out.println("}");
