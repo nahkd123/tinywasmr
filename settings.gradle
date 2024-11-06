@@ -3,5 +3,6 @@ plugins {
 }
 
 include 'engine'
+include 'parser'
 include 'probe'
 include 'trace'

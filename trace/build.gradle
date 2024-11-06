@@ -1,8 +1,8 @@
 dependencies {
-    implementation 'info.picocli:picocli:4.7.4'
-
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'
+    testImplementation libs.junit.jupiter
     implementation project(':engine')
+    implementation project(':parser')
+    implementation project(':probe')
 }
 
 tasks.named('test') {

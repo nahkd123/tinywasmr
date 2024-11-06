@@ -1,38 +1,45 @@
 package tinywasmr.engine.type;
 
-public class Limit {
-	private long min;
-	private long max;
-
-	private Limit(long min, long max) {
-		this.min = min;
-		this.max = max;
+public record Limit(int min, int max) {
+	public Limit {
+		if (max < -1) throw new IllegalArgumentException("Expecting -1 or non-negative value for max, but %d found"
+			.formatted(max));
 	}
 
-	public static Limit min(long min) {
-		if (min < 0) throw new IllegalArgumentException("min must be greater than or equals to 0");
-		return new Limit(min, -1);
+	/**
+	 * <p>
+	 * Create a new limit without maximum value.
+	 * </p>
+	 * 
+	 * @param min The minimum value of the limit.
+	 */
+	public Limit(int min) {
+		this(min, -1);
 	}
 
-	public static Limit max(long min, long max) {
-		if (min < 0) throw new IllegalArgumentException("min must be greater than or equals to 0");
-		if (max < min) throw new IllegalArgumentException("max must be greater than or equals to min");
-		return new Limit(min, max);
-	}
-
-	public long getMin() { return min; }
-
-	public boolean hasMax() {
+	/**
+	 * <p>
+	 * Check whether this limit have maximum value.
+	 * </p>
+	 * 
+	 * @return {@code true} if there is maximum value.
+	 */
+	public final boolean hasMax() {
 		return max != -1;
 	}
 
-	public long getMax() {
-		if (max == -1) throw new IllegalStateException("Limit does not have max value (check hasMax())");
-		return max;
-	}
-
+	/**
+	 * <p>
+	 * Get the maximum from this limit. This method throws
+	 * {@link IllegalArgumentException} if {@link #hasMax()} returns false.
+	 * </p>
+	 * 
+	 * @return The maximum value.
+	 * @throws IllegalArgumentException when {@link #hasMax()} is false.
+	 */
 	@Override
-	public String toString() {
-		return "Limit(" + min + (max == -1 ? " minimum" : (" -> " + max)) + ")";
+	public final int max() {
+		if (max == -1) throw new IllegalArgumentException("This limit does not have maximum value (hasMax() == false)");
+		return max;
 	}
 }

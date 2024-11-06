@@ -1,5 +1,5 @@
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'
+    testImplementation libs.junit.jupiter
 }
 
 tasks.named('test') {
