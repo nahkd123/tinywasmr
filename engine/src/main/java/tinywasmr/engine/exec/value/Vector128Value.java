@@ -35,4 +35,9 @@ public record Vector128Value(long msb, long lsb) implements Value {
 	public double f64() {
 		return lsb;
 	}
+
+	@Override
+	public Object mapToJava() {
+		return new long[] { msb, lsb };
+	}
 }

@@ -28,4 +28,9 @@ public record NumberI32Value(int i32) implements Value {
 	public double f64() {
 		return i32;
 	}
+
+	@Override
+	public Object mapToJava() {
+		return i32;
+	}
 }

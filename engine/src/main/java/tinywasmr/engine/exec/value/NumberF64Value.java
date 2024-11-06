@@ -28,4 +28,9 @@ public record NumberF64Value(double f64) implements Value {
 	public float f32() {
 		return (float) f64;
 	}
+
+	@Override
+	public Object mapToJava() {
+		return f64;
+	}
 }

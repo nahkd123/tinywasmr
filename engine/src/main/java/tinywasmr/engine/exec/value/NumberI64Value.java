@@ -28,4 +28,9 @@ public record NumberI64Value(long i64) implements Value {
 	public double f64() {
 		return i64;
 	}
+
+	@Override
+	public Object mapToJava() {
+		return i64;
+	}
 }
