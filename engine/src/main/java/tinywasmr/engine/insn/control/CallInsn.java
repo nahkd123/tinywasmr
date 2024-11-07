@@ -16,7 +16,10 @@ public record CallInsn(FunctionDecl function) implements Instruction {
 	@Override
 	public void execute(Machine vm) {
 		Function function = vm.peekFunctionFrame().getInstance().function(this.function);
+		callFunction(vm, function);
+	}
 
+	public static void callFunction(Machine vm, Function function) {
 		List<ValueType> paramTypes = function.type().inputs().types();
 		Value[] params = new Value[paramTypes.size()];
 

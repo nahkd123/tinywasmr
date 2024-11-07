@@ -3,11 +3,17 @@ package tinywasmr.engine.type.value;
 import java.util.Collections;
 import java.util.List;
 
-import tinywasmr.engine.exec.value.Value;
+import tinywasmr.engine.exec.value.RefValue;
 
 public enum RefType implements ValueType {
-	FUNC,
-	EXTERN;
+	FUNC(RefValue.NULL_FUNC),
+	EXTERN(RefValue.NULL_EXTERN);
+
+	private RefValue zero;
+
+	private RefType(RefValue zero) {
+		this.zero = zero;
+	}
 
 	@Override
 	public List<ValueType> blockResults() {
@@ -15,7 +21,7 @@ public enum RefType implements ValueType {
 	}
 
 	@Override
-	public Value zero() {
-		throw new RuntimeException("Not implemented");
+	public RefValue zero() {
+		return zero;
 	}
 }

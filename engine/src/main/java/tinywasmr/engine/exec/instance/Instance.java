@@ -3,9 +3,11 @@ package tinywasmr.engine.exec.instance;
 import java.util.Collection;
 import java.util.List;
 
+import tinywasmr.engine.exec.table.Table;
 import tinywasmr.engine.module.CustomSection;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.func.FunctionDecl;
+import tinywasmr.engine.module.table.TableDecl;
 
 /**
  * <p>
@@ -44,6 +46,13 @@ public interface Instance {
 
 	default Function function(FunctionDecl decl) {
 		for (Function function : functions()) if (function.declaration() == decl) return function;
+		return null;
+	}
+
+	List<Table> tables();
+
+	default Table table(TableDecl decl) {
+		for (Table table : tables()) if (table.declaration() == decl) return table;
 		return null;
 	}
 

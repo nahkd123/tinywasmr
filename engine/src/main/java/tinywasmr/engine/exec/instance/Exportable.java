@@ -6,5 +6,4 @@ package tinywasmr.engine.exec.instance;
  * </p>
  */
 public interface Exportable {
-	Instance instance();
 }

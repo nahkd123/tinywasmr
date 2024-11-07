@@ -7,6 +7,7 @@ import tinywasmr.engine.module.export.ExportDecl;
 import tinywasmr.engine.module.func.FunctionDecl;
 import tinywasmr.engine.module.func.ModuleFunctionDecl;
 import tinywasmr.engine.module.imprt.ImportDecl;
+import tinywasmr.engine.module.table.TableDecl;
 
 /**
  * <p>
@@ -42,6 +43,8 @@ public interface WasmModule {
 	Collection<ImportDecl> declaredImports();
 
 	Collection<ExportDecl> declaredExports();
+
+	Collection<TableDecl> declaredTables();
 
 	/**
 	 * <p>

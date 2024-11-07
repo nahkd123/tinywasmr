@@ -42,4 +42,14 @@ public record Limit(int min, int max) {
 		if (max == -1) throw new IllegalArgumentException("This limit does not have maximum value (hasMax() == false)");
 		return max;
 	}
+
+	public final int allocSize() {
+		return max == -1 ? min : max;
+	}
+
+	@Override
+	public final String toString() {
+		if (max == -1) return "minimum of %d".formatted(min);
+		return "from %d to %d".formatted(min, max);
+	}
 }

@@ -13,6 +13,7 @@ import tinywasmr.engine.exec.value.NumberI64Value;
 import tinywasmr.engine.exec.value.Value;
 import tinywasmr.engine.insn.ConstInsn;
 import tinywasmr.engine.insn.control.BlockInsn;
+import tinywasmr.engine.insn.control.CallIndirectInsn;
 import tinywasmr.engine.insn.control.CallInsn;
 import tinywasmr.engine.insn.control.ControlInsn;
 import tinywasmr.engine.insn.control.IfInsn;
@@ -23,6 +24,8 @@ import tinywasmr.engine.insn.parametric.ParametricInsn;
 import tinywasmr.engine.insn.parametric.SelectExplictInsn;
 import tinywasmr.engine.insn.ref.RefFuncInsn;
 import tinywasmr.engine.insn.ref.RefInsn;
+import tinywasmr.engine.insn.table.TableInsn;
+import tinywasmr.engine.insn.table.TableInsnType;
 import tinywasmr.engine.insn.variable.LocalInsn;
 import tinywasmr.engine.insn.variable.LocalInsnType;
 import tinywasmr.engine.type.BlockType;
@@ -63,6 +66,10 @@ public class CodeParser {
 	public static final int LOCAL_TEE = 0x22;
 	public static final int GLOBAL_GET = 0x23;
 	public static final int GLOBAL_SET = 0x24;
+
+	// Table instructions
+	public static final int TABLE_GET = 0x25;
+	public static final int TABLE_SET = 0x26;
 
 	// Numeric instructions
 	public static final int I32_CONST = 0x41;
@@ -181,6 +188,14 @@ public class CodeParser {
 	public static final int REF_IS_NULL = 0xD1;
 	public static final int REF_FUNC = 0xD2;
 
+	// Table instructions (extended)
+	public static final int TABLE_INIT = 0xFC0C;
+	public static final int ELEM_DROP = 0xFC0D;
+	public static final int TABLE_COPY = 0xFC0E;
+	public static final int TABLE_GROW = 0xFC0F;
+	public static final int TABLE_SIZE = 0xFC10;
+	public static final int TABLE_FILL = 0xFC11;
+
 	public static InstructionBuilder parseInsn(BinaryModuleParser moduleParser, int insn, InputStream stream) throws IOException {
 		// @formatter:off
 		switch (insn) {
@@ -229,6 +244,11 @@ public class CodeParser {
 			int idx = StreamReader.readUint32Var(stream);
 			return view -> new CallInsn(view.functions().get(idx));
 		}
+		case CALL_INDIRECT: {
+			int typeIdx = StreamReader.readUint32Var(stream);
+			int tableIdx = StreamReader.readUint32Var(stream);
+			return view -> new CallIndirectInsn(view.types().get(typeIdx), view.tables().get(tableIdx));
+		}
 
 		// Parametric instructions
 		case DROP: return $ -> ParametricInsn.DROP;
@@ -252,6 +272,23 @@ public class CodeParser {
 
 			int index = StreamReader.readUint32Var(stream);
 			return $ -> new LocalInsn(type, index);
+		}
+		
+		// Table instructions
+		case TABLE_GET:
+		case TABLE_SET:
+		case TABLE_GROW:
+		case TABLE_SIZE:
+		case TABLE_FILL: {
+			int idx = StreamReader.readUint32Var(stream);
+			return switch (insn) {
+			case TABLE_GET -> view -> new TableInsn(TableInsnType.GET, view.tables().get(idx));
+			case TABLE_SET -> view -> new TableInsn(TableInsnType.SET, view.tables().get(idx));
+			case TABLE_GROW -> view -> new TableInsn(TableInsnType.GROW, view.tables().get(idx));
+			case TABLE_SIZE -> view -> new TableInsn(TableInsnType.SIZE, view.tables().get(idx));
+			case TABLE_FILL -> view -> new TableInsn(TableInsnType.FILL, view.tables().get(idx));
+			default -> throw new RuntimeException("Unreachable");
+			};
 		}
 
 		// Numeric instructions
@@ -385,6 +422,14 @@ public class CodeParser {
 		case REF_FUNC: {
 			int idx = StreamReader.readUint32Var(stream);
 			return view -> new RefFuncInsn(view.functions().get(idx));
+		}
+		
+		// Multi-byte instructions
+		case 0xFC:
+		case 0xFD: {
+			int second = stream.read();
+			if (second == -1) throw new EOFException("EOF while reading 2nd byte of multi-byte instruction (0x%2x...)".formatted(insn));
+			return parseInsn(moduleParser, insn << 8 | second, stream);
 		}
 
 		default: throw new RuntimeException("Instruction not implemented: 0x%02x".formatted(insn));

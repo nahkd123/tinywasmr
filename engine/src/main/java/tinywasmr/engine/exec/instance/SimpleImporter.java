@@ -7,6 +7,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import tinywasmr.engine.exec.table.Table;
 import tinywasmr.engine.module.func.ExternalFunctionDecl;
 import tinywasmr.engine.type.value.ValueType;
 
@@ -43,6 +44,13 @@ public record SimpleImporter(Map<String, Object> objects) implements Importer {
 		if (obj instanceof Function function) return function;
 		if (obj instanceof ExternalFunctionDecl extern) return new Function(null, extern);
 		if (obj instanceof Runnable runnable) return new Function(null, ExternalFunctionDecl.ofVoid(runnable));
+		return null;
+	}
+
+	public Table importTable(String module, String name) {
+		Object obj = objects.get(key(module, name));
+		if (obj instanceof Table table) return table;
+		// TODO ArrayTableView - A view to RefValue[]
 		return null;
 	}
 

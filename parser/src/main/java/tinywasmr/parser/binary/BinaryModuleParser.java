@@ -17,6 +17,8 @@ import tinywasmr.engine.module.func.ImportFunctionDecl;
 import tinywasmr.engine.module.func.ModuleFunctionDecl;
 import tinywasmr.engine.module.imprt.FunctionImportDescription;
 import tinywasmr.engine.module.imprt.ImportDecl;
+import tinywasmr.engine.module.table.ModuleTableDecl;
+import tinywasmr.engine.module.table.TableDecl;
 import tinywasmr.engine.type.FunctionType;
 import tinywasmr.engine.type.GlobalType;
 import tinywasmr.engine.type.Limit;
@@ -43,6 +45,7 @@ public class BinaryModuleParser {
 	private List<CustomSection> custom;
 	private List<FunctionType> types;
 	private int[] functions;
+	private TableType[] tables;
 	private BinaryImport[] imports;
 	private BinaryExport[] exports;
 	private BinaryFunctionBody[] code;
@@ -74,6 +77,7 @@ public class BinaryModuleParser {
 		custom = new ArrayList<>();
 		types = List.of();
 		functions = new int[0];
+		tables = new TableType[0];
 		imports = new BinaryImport[0];
 		exports = new BinaryExport[0];
 		code = new BinaryFunctionBody[0];
@@ -118,28 +122,24 @@ public class BinaryModuleParser {
 		logger.verbose("begin parsing section");
 		SectionHeader header = SectionParser.parseSectionHeader(this, stream);
 
-		// It is worth mention that some schizo compilers may choose to put anything
+		// It is worth mentioning that some schizo compilers may choose to put anything
 		// before type section, like imports or code for example.
-
+		// @formatter:off
 		switch (header.id()) {
-		case 0x00:
-			custom.add(SectionParser.parseCustomSection(this, header.size(), stream));
-			break;
-		case 0x01:
-			types = SectionParser.parseTypeSection(this, header.size(), stream);
-			break;
-		case 0x02:
-			imports = SectionParser.parseImportSection(this, header.size(), stream);
-			break;
-		case 0x03:
-			functions = SectionParser.parseFunctionSection(this, header.size(), stream);
-			break;
-		case 0x07:
-			exports = SectionParser.parseExportSection(this, header.size(), stream);
-			break;
-		case 0x0A:
-			code = SectionParser.parseCodeSection(this, header.size(), stream);
-			break;
+		case 0x00: custom.add(SectionParser.parseCustomSection(this, header.size(), stream)); break;
+		case 0x01: types = SectionParser.parseTypeSection(this, header.size(), stream); break;
+		case 0x02: imports = SectionParser.parseImportSection(this, header.size(), stream); break;
+		case 0x03: functions = SectionParser.parseFunctionSection(this, header.size(), stream); break;
+		case 0x04: tables = SectionParser.parseTableSection(this, header.size(), stream); break;
+		case 0x05: throw new RuntimeException("0x05 memory section not implemented");
+		case 0x06: throw new RuntimeException("0x06 global section not implemented");
+		case 0x07: exports = SectionParser.parseExportSection(this, header.size(), stream); break;
+		case 0x08: throw new RuntimeException("0x08 start section not implemented");
+		case 0x09: throw new RuntimeException("0x09 element section not implemented");
+		case 0x0A: code = SectionParser.parseCodeSection(this, header.size(), stream); break;
+		case 0x0B: throw new RuntimeException("0x0B data section not implemented");
+		case 0x0C: throw new RuntimeException("0x0C data count section not implemented");
+		// @formatter:on
 		default:
 			logger.warn("Section with ID 0x%02x is not implemented", header.id());
 			if (header.size() == 0) throw new IOException("Section 0x%02x not implemented, can't skip (guessing size)"
@@ -244,7 +244,8 @@ public class BinaryModuleParser {
 
 		ParsedWasmModule module = new ParsedWasmModule();
 		List<FunctionDecl> functions = new ArrayList<>();
-		BinaryIndicesView indicesView = new BinaryIndicesView(types, functions);
+		List<TableDecl> tables = new ArrayList<>();
+		BinaryIndicesView indicesView = new BinaryIndicesView(types, tables, functions);
 
 		// Resolving imports
 		List<ImportDecl> imports = Stream.of(this.imports)
@@ -258,6 +259,12 @@ public class BinaryModuleParser {
 			}
 		}
 
+		// Resolving declared tables
+		List<ModuleTableDecl> moduleTables = Stream.of(this.tables)
+			.map(type -> new ModuleTableDecl(module, type))
+			.toList();
+		tables.addAll(moduleTables);
+
 		// Resolving declared functions
 		List<ModuleFunctionDecl> moduleFunctions = IntStream.of(this.functions)
 			.mapToObj(types::get)
@@ -265,6 +272,7 @@ public class BinaryModuleParser {
 			.toList();
 		functions.addAll(moduleFunctions);
 
+		// Resolving exports
 		List<ExportDecl> exports = Stream.of(this.exports)
 			.map(binary -> new ExportDecl(binary.name(), switch (binary.type()) {
 			case BinaryExport.TYPE_FUNC -> new FunctionExportDescription(functions.get(binary.index()));
@@ -272,6 +280,7 @@ public class BinaryModuleParser {
 			}))
 			.toList();
 
+		// Resolving function bodies (unwrapping instructions)
 		if (code.length != moduleFunctions.size()) throw new IOException("Number of functions in code section does not"
 			+ "match with number of functions in function section (%d != %d)".formatted(
 				code.length,
@@ -282,7 +291,9 @@ public class BinaryModuleParser {
 			code[i].body().forEach(b -> decl.body().add(b.build(indicesView)));
 		}
 
+		// Finalize
 		module.declaredImports().addAll(imports);
+		module.declaredTables().addAll(tables);
 		module.declaredFunctions().addAll(functions);
 		module.declaredExports().addAll(exports);
 

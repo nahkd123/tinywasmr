@@ -9,6 +9,7 @@ import java.util.List;
 
 import tinywasmr.engine.module.CustomSection;
 import tinywasmr.engine.type.FunctionType;
+import tinywasmr.engine.type.TableType;
 import tinywasmr.engine.type.value.ValueType;
 import tinywasmr.parser.binary.imprt.BinaryImport;
 
@@ -75,6 +76,21 @@ class SectionParser {
 		moduleParser.getLogger().verbose("function section %d functions", count);
 		moduleParser.getLogger().verbose("end parsing function section");
 		return functionTypeRefs;
+	}
+
+	public static TableType[] parseTableSection(BinaryModuleParser moduleParser, int size, InputStream stream) throws IOException {
+		moduleParser.getLogger().verbose("begin parsing table section");
+		int count = StreamReader.readUint32Var(stream);
+		TableType[] tables = new TableType[count];
+		moduleParser.getLogger().verbose("table section %d tables", count);
+
+		for (int i = 0; i < count; i++) {
+			tables[i] = moduleParser.parseTableType(stream);
+			moduleParser.getLogger().verbose("  table #%d: %s of %s", i, tables[i].limit(), tables[i].refType());
+		}
+
+		moduleParser.getLogger().verbose("end parsing table section");
+		return tables;
 	}
 
 	public static BinaryImport[] parseImportSection(BinaryModuleParser moduleParser, int size, InputStream stream) throws IOException {

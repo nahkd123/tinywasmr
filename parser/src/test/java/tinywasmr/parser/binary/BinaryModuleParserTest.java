@@ -10,8 +10,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
 import tinywasmr.engine.exec.instance.DefaultInstance;
+import tinywasmr.engine.exec.instance.Function;
 import tinywasmr.engine.exec.instance.Instance;
 import tinywasmr.engine.exec.instance.SimpleImporter;
+import tinywasmr.engine.module.func.ExternalFunctionDecl;
 import tinywasmr.engine.type.value.NumberType;
 import tinywasmr.engine.util.SystemLogger;
 import tinywasmr.parser.ParsedWasmModule;
@@ -48,6 +50,16 @@ class BinaryModuleParserTest {
 				.<Integer>addFunc("answer", NumberType.I32, () -> answer))
 			.build());
 		instance.export("main").asFunction().exec();
+		assertEquals(1, hits.get());
+	}
+
+	@Test
+	void testCallIndirect() {
+		AtomicInteger hits = new AtomicInteger();
+		Function hitter = new Function(null, ExternalFunctionDecl.ofVoid(hits::incrementAndGet));
+		ParsedWasmModule module = load("binary/003_callindirect.wasm");
+		Instance instance = new DefaultInstance(module, null);
+		instance.export("main").asFunction().exec(hitter);
 		assertEquals(1, hits.get());
 	}
 }
