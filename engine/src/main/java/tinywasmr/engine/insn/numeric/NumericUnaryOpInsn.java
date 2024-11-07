@@ -1,5 +1,6 @@
 package tinywasmr.engine.insn.numeric;
 
+import tinywasmr.engine.exec.ValidationException;
 import tinywasmr.engine.exec.value.NumberF32Value;
 import tinywasmr.engine.exec.value.NumberF64Value;
 import tinywasmr.engine.exec.value.NumberI32Value;
@@ -109,7 +110,7 @@ public enum NumericUnaryOpInsn implements Instruction {
 	public void execute(Machine vm) {
 		Value value = vm.peekFrame().popOprand();
 		if (vm.hasRuntimeValidation() && !value.type().equals(type))
-			throw new IllegalArgumentException("Expected %s on stack, found %s".formatted(type, value.type()));
+			throw new ValidationException("Expected %s on stack, found %s".formatted(type, value.type()));
 		vm.peekFrame().pushOperand(operator.apply(value));
 	}
 }

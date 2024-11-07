@@ -13,11 +13,14 @@ import tinywasmr.engine.insn.control.IfInsn;
 import tinywasmr.engine.insn.control.LoopInsn;
 import tinywasmr.engine.insn.numeric.NumericBinaryOpInsn;
 import tinywasmr.engine.insn.numeric.NumericUnaryOpInsn;
+import tinywasmr.engine.insn.parametric.ParametricInsn;
+import tinywasmr.engine.insn.parametric.SelectExplictInsn;
 import tinywasmr.engine.insn.ref.RefFuncInsn;
 import tinywasmr.engine.insn.ref.RefInsn;
 import tinywasmr.engine.insn.variable.LocalInsn;
 import tinywasmr.engine.insn.variable.LocalInsnType;
 import tinywasmr.engine.type.BlockType;
+import tinywasmr.engine.type.ResultType;
 import tinywasmr.engine.type.value.RefType;
 import tinywasmr.engine.type.value.ValueType;
 
@@ -45,8 +48,8 @@ public class CodeParser {
 
 	// Parametric instructions
 	public static final int DROP = 0x1A;
-	public static final int SELECT = 0x1B;
-	public static final int SELECT_MULTI = 0x1C;
+	public static final int SELECT_AUTO = 0x1B;
+	public static final int SELECT_EXPLICT = 0x1C;
 
 	// Variable instructions
 	public static final int LOCAL_GET = 0x20;
@@ -219,6 +222,15 @@ public class CodeParser {
 		case CALL: {
 			int idx = StreamReader.readUint32Var(stream);
 			return view -> new CallInsn(view.functions().get(idx));
+		}
+
+		// Parametric instructions
+		case DROP: return $ -> ParametricInsn.DROP;
+		case SELECT_AUTO: return $ -> ParametricInsn.SELECT_AUTO;
+		case SELECT_EXPLICT: {
+			ResultType resultType = moduleParser.parseResultType(stream);
+			if (resultType.types().size() != 1) throw new IOException("Explict select requires exactly 1 result, found %s".formatted(resultType.types()));
+			return $ -> new SelectExplictInsn(resultType.types().get(0));
 		}
 
 		// Variable instructions

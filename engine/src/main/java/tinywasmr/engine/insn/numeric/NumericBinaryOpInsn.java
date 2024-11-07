@@ -1,5 +1,6 @@
 package tinywasmr.engine.insn.numeric;
 
+import tinywasmr.engine.exec.ValidationException;
 import tinywasmr.engine.exec.value.NumberF32Value;
 import tinywasmr.engine.exec.value.NumberF64Value;
 import tinywasmr.engine.exec.value.NumberI32Value;
@@ -189,9 +190,9 @@ public enum NumericBinaryOpInsn implements Instruction {
 		Value bottom = vm.peekFrame().popOprand();
 
 		if (vm.hasRuntimeValidation()) {
-			if (!top.type().equals(topType)) throw new IllegalArgumentException("Expected %s at top, found %s"
+			if (!top.type().equals(topType)) throw new ValidationException("Expected %s at top, found %s"
 				.formatted(topType, top.type()));
-			if (!bottom.type().equals(bottomType)) throw new IllegalArgumentException("Expected %s at bottom, found %s"
+			if (!bottom.type().equals(bottomType)) throw new ValidationException("Expected %s at bottom, found %s"
 				.formatted(topType, bottom.type()));
 		}
 
