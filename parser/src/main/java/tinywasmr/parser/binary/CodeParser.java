@@ -6,6 +6,12 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import tinywasmr.engine.exec.value.NumberF32Value;
+import tinywasmr.engine.exec.value.NumberF64Value;
+import tinywasmr.engine.exec.value.NumberI32Value;
+import tinywasmr.engine.exec.value.NumberI64Value;
+import tinywasmr.engine.exec.value.Value;
+import tinywasmr.engine.insn.ConstInsn;
 import tinywasmr.engine.insn.control.BlockInsn;
 import tinywasmr.engine.insn.control.CallInsn;
 import tinywasmr.engine.insn.control.ControlInsn;
@@ -249,6 +255,20 @@ public class CodeParser {
 		}
 
 		// Numeric instructions
+		case I32_CONST:
+		case I64_CONST:
+		case F32_CONST:
+		case F64_CONST: {
+			Value val = switch (insn) {
+			case I32_CONST -> new NumberI32Value(StreamReader.readSint32Var(stream));
+			case I64_CONST -> new NumberI64Value(StreamReader.readSint64Var(stream));
+			case F32_CONST -> new NumberF32Value(StreamReader.readFloat32(stream));
+			case F64_CONST -> new NumberF64Value(StreamReader.readFloat64(stream));
+			default -> throw new RuntimeException("Unreachable");
+			};
+			return $ -> new ConstInsn(val);
+		}
+		
 		case I32_EQZ: return $ -> NumericUnaryOpInsn.I32_EQZ;
 		case I32_EQ: return $ -> NumericBinaryOpInsn.I32_EQ;
 		case I32_NE: return $ -> NumericBinaryOpInsn.I32_NE;

@@ -26,7 +26,8 @@ public class FunctionFrame extends AbstractFrame {
 
 	public static FunctionFrame createCall(Function function, Value[] parameters) {
 		if (!(function.declaration() instanceof ModuleFunctionDecl moduleDecl))
-			throw new IllegalArgumentException("Cannot create function frame of non-module function");
+			throw new IllegalArgumentException("Cannot create function frame of %s"
+				.formatted(function.declaration().getClass().getName()));
 
 		List<ValueType> allLocals = moduleDecl.allLocals();
 		List<ValueType> extras = moduleDecl.extraLocals();

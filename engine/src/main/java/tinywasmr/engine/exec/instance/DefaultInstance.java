@@ -10,6 +10,8 @@ import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.export.ExportDecl;
 import tinywasmr.engine.module.export.FunctionExportDescription;
 import tinywasmr.engine.module.func.FunctionDecl;
+import tinywasmr.engine.module.func.ImportFunctionDecl;
+import tinywasmr.engine.type.FunctionType;
 
 public class DefaultInstance implements Instance {
 	private WasmModule module;
@@ -26,11 +28,29 @@ public class DefaultInstance implements Instance {
 	}
 
 	private void setup(Importer importer) {
-		// TODO import functions
+		if (module.declaredImports().size() > 0 && importer == null) {
+			throw new IllegalArgumentException("The module have at least 1 import; an importer must be provided.");
+		}
+
 		// TODO initialize everything
 
 		for (FunctionDecl decl : module.declaredFunctions()) {
-			Function function = new Function(this, decl);
+			Function function;
+
+			if (decl instanceof ImportFunctionDecl imp) {
+				String mod = imp.declaration().module();
+				String name = imp.declaration().name();
+				FunctionType type = imp.type();
+				function = importer.importFunction(mod, name);
+				if (function == null) throw new IllegalArgumentException("Module requires function %s::%s"
+					.formatted(mod, name));
+				if (!type.equals(function.type()))
+					throw new IllegalArgumentException("Imported function %s::%s type mismatch: %s (decl) != %s"
+						.formatted(mod, name, type, function.type()));
+			} else {
+				function = new Function(this, decl);
+			}
+
 			allFunctions.add(function);
 			declToFunction.put(decl, function);
 		}

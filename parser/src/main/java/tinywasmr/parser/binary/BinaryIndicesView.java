@@ -5,5 +5,5 @@ import java.util.List;
 import tinywasmr.engine.module.func.FunctionDecl;
 import tinywasmr.engine.type.FunctionType;
 
-record BinaryIndicesView(List<FunctionType> types, List<FunctionDecl> functions) {
+public record BinaryIndicesView(List<FunctionType> types, List<FunctionDecl> functions) {
 }

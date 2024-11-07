@@ -10,6 +10,7 @@ import java.util.List;
 import tinywasmr.engine.module.CustomSection;
 import tinywasmr.engine.type.FunctionType;
 import tinywasmr.engine.type.value.ValueType;
+import tinywasmr.parser.binary.imprt.BinaryImport;
 
 class SectionParser {
 	public static SectionHeader parseSectionHeader(BinaryModuleParser moduleParser, InputStream stream) throws IOException {
@@ -76,12 +77,32 @@ class SectionParser {
 		return functionTypeRefs;
 	}
 
+	public static BinaryImport[] parseImportSection(BinaryModuleParser moduleParser, int size, InputStream stream) throws IOException {
+		moduleParser.getLogger().verbose("begin parsing import section");
+		int count = StreamReader.readUint32Var(stream);
+		BinaryImport[] imports = new BinaryImport[count];
+		moduleParser.getLogger().verbose("import section $d imports", count);
+
+		for (int i = 0; i < count; i++) {
+			imports[i] = BinaryImport.parse(moduleParser, stream);
+			moduleParser.getLogger().verbose("  import #%d: %s::%s", i, imports[i].module(), imports[i].name());
+		}
+
+		moduleParser.getLogger().verbose("end parsing import section");
+		return imports;
+	}
+
 	public static BinaryExport[] parseExportSection(BinaryModuleParser moduleParser, int size, InputStream stream) throws IOException {
 		moduleParser.getLogger().verbose("begin parsing export section");
 		int count = StreamReader.readUint32Var(stream);
 		BinaryExport[] exports = new BinaryExport[count];
-		for (int i = 0; i < count; i++) exports[i] = BinaryExport.parse(stream);
 		moduleParser.getLogger().verbose("export section $d exports", count);
+
+		for (int i = 0; i < count; i++) {
+			exports[i] = BinaryExport.parse(stream);
+			moduleParser.getLogger().verbose("  export #%d: %d -> %s", i, exports[i].index(), exports[i].name());
+		}
+
 		moduleParser.getLogger().verbose("end parsing export section");
 		return exports;
 	}

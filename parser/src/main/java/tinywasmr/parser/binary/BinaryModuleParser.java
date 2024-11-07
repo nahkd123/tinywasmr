@@ -13,7 +13,10 @@ import tinywasmr.engine.module.CustomSection;
 import tinywasmr.engine.module.export.ExportDecl;
 import tinywasmr.engine.module.export.FunctionExportDescription;
 import tinywasmr.engine.module.func.FunctionDecl;
+import tinywasmr.engine.module.func.ImportFunctionDecl;
 import tinywasmr.engine.module.func.ModuleFunctionDecl;
+import tinywasmr.engine.module.imprt.FunctionImportDescription;
+import tinywasmr.engine.module.imprt.ImportDecl;
 import tinywasmr.engine.type.FunctionType;
 import tinywasmr.engine.type.GlobalType;
 import tinywasmr.engine.type.Limit;
@@ -28,6 +31,7 @@ import tinywasmr.engine.type.value.VectorType;
 import tinywasmr.engine.util.Logger;
 import tinywasmr.engine.util.VoidLogger;
 import tinywasmr.parser.ParsedWasmModule;
+import tinywasmr.parser.binary.imprt.BinaryImport;
 
 public class BinaryModuleParser {
 	private static final byte[] SIGNATURE = new byte[] { 0x00, 0x61, 0x73, 0x6d };
@@ -39,6 +43,7 @@ public class BinaryModuleParser {
 	private List<CustomSection> custom;
 	private List<FunctionType> types;
 	private int[] functions;
+	private BinaryImport[] imports;
 	private BinaryExport[] exports;
 	private BinaryFunctionBody[] code;
 
@@ -69,6 +74,7 @@ public class BinaryModuleParser {
 		custom = new ArrayList<>();
 		types = List.of();
 		functions = new int[0];
+		imports = new BinaryImport[0];
 		exports = new BinaryExport[0];
 		code = new BinaryFunctionBody[0];
 	}
@@ -121,6 +127,9 @@ public class BinaryModuleParser {
 			break;
 		case 0x01:
 			types = SectionParser.parseTypeSection(this, header.size(), stream);
+			break;
+		case 0x02:
+			imports = SectionParser.parseImportSection(this, header.size(), stream);
 			break;
 		case 0x03:
 			functions = SectionParser.parseFunctionSection(this, header.size(), stream);
@@ -235,11 +244,27 @@ public class BinaryModuleParser {
 
 		ParsedWasmModule module = new ParsedWasmModule();
 		List<FunctionDecl> functions = new ArrayList<>();
+		BinaryIndicesView indicesView = new BinaryIndicesView(types, functions);
+
+		// Resolving imports
+		List<ImportDecl> imports = Stream.of(this.imports)
+			.map(binary -> new ImportDecl(binary.module(), binary.name(), binary.description().build(indicesView)))
+			.toList();
+		for (ImportDecl imp : imports) {
+			if (imp.description() instanceof FunctionImportDescription funcImport) {
+				functions.add(new ImportFunctionDecl(module, funcImport.type(), imp));
+			} else {
+				throw new RuntimeException("Not implemented: %s".formatted(imp.getClass()));
+			}
+		}
+
+		// Resolving declared functions
 		List<ModuleFunctionDecl> moduleFunctions = IntStream.of(this.functions)
 			.mapToObj(types::get)
 			.map(type -> new ModuleFunctionDecl(module, type, new ArrayList<>(), new ArrayList<>()))
 			.toList();
 		functions.addAll(moduleFunctions);
+
 		List<ExportDecl> exports = Stream.of(this.exports)
 			.map(binary -> new ExportDecl(binary.name(), switch (binary.type()) {
 			case BinaryExport.TYPE_FUNC -> new FunctionExportDescription(functions.get(binary.index()));
@@ -247,7 +272,6 @@ public class BinaryModuleParser {
 			}))
 			.toList();
 
-		BinaryIndicesView indicesView = new BinaryIndicesView(types, functions);
 		if (code.length != moduleFunctions.size()) throw new IOException("Number of functions in code section does not"
 			+ "match with number of functions in function section (%d != %d)".formatted(
 				code.length,
@@ -258,6 +282,7 @@ public class BinaryModuleParser {
 			code[i].body().forEach(b -> decl.body().add(b.build(indicesView)));
 		}
 
+		module.declaredImports().addAll(imports);
 		module.declaredFunctions().addAll(functions);
 		module.declaredExports().addAll(exports);
 
