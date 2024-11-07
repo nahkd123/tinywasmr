@@ -25,4 +25,7 @@ public interface Value {
 		if (java instanceof long[] v128) return new Vector128Value(v128[0], v128[1]);
 		throw new IllegalArgumentException("Unknown type: %s".formatted(java.getClass().getName()));
 	}
+
+	static Value TRUE = new NumberI32Value(1);
+	static Value FALSE = new NumberI32Value(0);
 }
