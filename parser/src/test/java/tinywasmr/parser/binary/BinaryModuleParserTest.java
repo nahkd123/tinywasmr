@@ -25,7 +25,7 @@ class BinaryModuleParserTest {
 
 	@Test
 	void testAddTwo() {
-		ParsedWasmModule module = load("binary_addtwo.wasm");
+		ParsedWasmModule module = load("binary/001_addtwo.wasm");
 		Instance instance = new DefaultInstance(module, null);
 		assertEquals(3, instance.export("addTwo").asFunction().exec(1, 2));
 	}
