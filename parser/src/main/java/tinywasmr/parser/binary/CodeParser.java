@@ -11,6 +11,7 @@ import tinywasmr.engine.exec.value.NumberF64Value;
 import tinywasmr.engine.exec.value.NumberI32Value;
 import tinywasmr.engine.exec.value.NumberI64Value;
 import tinywasmr.engine.exec.value.Value;
+import tinywasmr.engine.exec.value.Vector128Value;
 import tinywasmr.engine.insn.ConstInsn;
 import tinywasmr.engine.insn.control.BlockInsn;
 import tinywasmr.engine.insn.control.CallIndirectInsn;
@@ -195,6 +196,9 @@ public class CodeParser {
 	public static final int TABLE_GROW = 0xFC0F;
 	public static final int TABLE_SIZE = 0xFC10;
 	public static final int TABLE_FILL = 0xFC11;
+
+	// Vector instructions
+	public static final int V128_CONST = 0xFD0C;
 
 	public static InstructionBuilder parseInsn(BinaryModuleParser moduleParser, int insn, InputStream stream) throws IOException {
 		// @formatter:off
@@ -423,7 +427,13 @@ public class CodeParser {
 			int idx = StreamReader.readUint32Var(stream);
 			return view -> new RefFuncInsn(view.functions().get(idx));
 		}
-		
+
+		// Vector instructions
+		case V128_CONST: {
+			Vector128Value val = StreamReader.readV128(stream);
+			return $ -> new ConstInsn(val);
+		}
+
 		// Multi-byte instructions
 		case 0xFC:
 		case 0xFD: {

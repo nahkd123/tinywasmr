@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import tinywasmr.engine.exec.value.Vector128Value;
+
 public class StreamReader {
 	public static int readInt32LE(InputStream stream) throws IOException {
 		byte[] bs = stream.readNBytes(4);
@@ -99,6 +101,28 @@ public class StreamReader {
 			| (bs[6] & 0xffL) << 8L
 			| (bs[7] & 0xffL);
 		return Double.longBitsToDouble(i);
+	}
+
+	public static Vector128Value readV128(InputStream stream) throws IOException {
+		byte[] bs = stream.readNBytes(16);
+		if (bs.length != 8) throw new EOFException("Expected to read 16 bytes but EOF found");
+		long lsb = (bs[0] & 0xffL)
+			| (bs[1] & 0xffL) << 8L
+			| (bs[2] & 0xffL) << 16L
+			| (bs[3] & 0xffL) << 24L
+			| (bs[4] & 0xffL) << 32L
+			| (bs[5] & 0xffL) << 40L
+			| (bs[6] & 0xffL) << 48L
+			| (bs[7] & 0xffL) << 56L;
+		long msb = (bs[8] & 0xffL)
+			| (bs[9] & 0xffL) << 8L
+			| (bs[10] & 0xffL) << 16L
+			| (bs[11] & 0xffL) << 24L
+			| (bs[12] & 0xffL) << 32L
+			| (bs[13] & 0xffL) << 40L
+			| (bs[14] & 0xffL) << 48L
+			| (bs[15] & 0xffL) << 56L;
+		return new Vector128Value(msb, lsb);
 	}
 
 	public static char readUtf8(InputStream stream) throws IOException {
