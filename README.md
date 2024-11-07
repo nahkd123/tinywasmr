@@ -4,6 +4,13 @@ _Tiny (?) WebAssembly runner/engine_
 ## Warning: Heavily in development!
 It's not ready for production use yet; please come back later.
 
+## Links
+- [Documentations][docs]
+	+ [Engine](./docs/engine/index.md)
+	+ Parser
+	+ Probe tool
+	+ Trace tool
+
 ## Usage
 ### Simplest usage
 ```java
@@ -161,6 +168,7 @@ MIT License
 
 TODO add MIT license header to all source files
 
+[docs]: ./docs/index.md
 [wabt]: https://github.com/WebAssembly/wabt
 [alt-chicory]: https://github.com/dylibso/chicory
 [alt-wasmer]: https://github.com/wasmerio/wasmer-java
