@@ -13,9 +13,13 @@ import tinywasmr.engine.insn.control.IfInsn;
 import tinywasmr.engine.insn.control.LoopInsn;
 import tinywasmr.engine.insn.numeric.NumericBinaryOpInsn;
 import tinywasmr.engine.insn.numeric.NumericUnaryOpInsn;
+import tinywasmr.engine.insn.ref.RefFuncInsn;
+import tinywasmr.engine.insn.ref.RefInsn;
 import tinywasmr.engine.insn.variable.LocalInsn;
 import tinywasmr.engine.insn.variable.LocalInsnType;
 import tinywasmr.engine.type.BlockType;
+import tinywasmr.engine.type.value.RefType;
+import tinywasmr.engine.type.value.ValueType;
 
 public class CodeParser {
 	public static InstructionBuilder parseInsn(BinaryModuleParser moduleParser, InputStream stream) throws IOException {
@@ -334,6 +338,23 @@ public class CodeParser {
 		case F64_MIN: return $ -> NumericBinaryOpInsn.F64_MIN;
 		case F64_MAX: return $ -> NumericBinaryOpInsn.F64_MAX;
 		case F64_COPYSIGN: return $ -> NumericBinaryOpInsn.F64_COPYSIGN;
+
+		// Reference instructions
+		case REF_NULL: {
+			ValueType type = moduleParser.parseValueType(stream);
+			if (!(type instanceof RefType refType)) throw new IOException("Expected funcref or externref, but found %s".formatted(type));
+			return switch (refType) {
+			case EXTERN -> $ -> RefInsn.NULL_EXTERN;
+			case FUNC -> $ -> RefInsn.NULL_FUNC;
+			default -> throw new RuntimeException("Unreachable");
+			};
+		}
+		case REF_IS_NULL: return $ -> RefInsn.IS_NULL;
+		case REF_FUNC: {
+			int idx = StreamReader.readUint32Var(stream);
+			return view -> new RefFuncInsn(view.functions().get(idx));
+		}
+
 		default: throw new RuntimeException("Instruction not implemented: 0x%02x".formatted(insn));
 		}
 		// @formatter:on
