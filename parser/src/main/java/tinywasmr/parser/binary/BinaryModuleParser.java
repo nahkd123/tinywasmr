@@ -69,6 +69,22 @@ public class BinaryModuleParser {
 
 	/**
 	 * <p>
+	 * Create a new parser to parse binary module with default options and no
+	 * logging.
+	 * </p>
+	 * <p>
+	 * The following options are used when you create parser using this constructor:
+	 * <ul>
+	 * <li>ignoreCustomSections set to {@code false}</li>
+	 * </ul>
+	 * </p>
+	 */
+	public BinaryModuleParser() {
+		this(new VoidLogger(), false);
+	}
+
+	/**
+	 * <p>
 	 * Reset the states of this parser. Must use before you call
 	 * {@link #parseModule(InputStream)} to parse different module.
 	 * </p>

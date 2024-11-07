@@ -16,7 +16,7 @@ It's not ready for production use yet; please come back later.
 ```java
 // Parse from binary module
 InputStream stream = new FileInputStream("path/to/cool_module.wasm");
-WasmModule module = new BinaryModuleParser(new SystemLogger(false), false).parseModule(stream);
+WasmModule module = new BinaryModuleParser().parseModule(stream);
 
 // Using our module
 // We are not importing functions to the module for the time being, so the 2nd param is null.
