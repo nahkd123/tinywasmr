@@ -6,7 +6,3 @@ plugins {
 include 'engine'
 include 'parser'
 include 'extern'
-
-// Tools
-include 'probe'
-include 'trace'
