@@ -27,25 +27,23 @@ public interface BranchBaseInsn extends Instruction {
 	 */
 	@Override
 	default void execute(Machine vm) {
-		List<ValueType> resultTypes = vm.peekFrame().getBranchResultTypes().blockResults();
+		FunctionFrame funcFrame = vm.peekFunctionFrame();
+		Frame targetFrame = vm.getFrameStack().get(vm.getFrameStack().size() - nestIndex() - 1);
+		List<ValueType> resultTypes = targetFrame.getBranchResultTypes().blockResults();
 		Value[] results = new Value[resultTypes.size()];
-
-		if (vm.peekFrame().getOperandStack().size() < results.length)
-			throw new IllegalStateException("Operand stack must have at least %d values".formatted(results.length));
 
 		for (int i = results.length - 1; i >= 0; i--) {
 			Value val = vm.peekFrame().popOprand();
-
 			if (vm.hasRuntimeValidation() && !val.type().equals(resultTypes.get(i)))
-				throw new ValidationException("Type mismatch: %s (stack) != %s (declared)"
+				throw new ValidationException("Type mismatch: %s (stack) != %s (block)"
 					.formatted(val.type(), resultTypes.get(i)));
-
 			results[i] = val;
 		}
 
 		for (int i = 0; i <= nestIndex(); i++) {
-			Frame poppedFrame = vm.popFrame();
-			if (poppedFrame instanceof FunctionFrame) throw new IllegalStateException("Cannot pop past function frame");
+			Frame frame = vm.popFrame();
+			if (frame == targetFrame) break;
+			if (frame == funcFrame) break; // can't pop past function frame
 		}
 
 		for (Value val : results) vm.peekFrame().pushOperand(val);

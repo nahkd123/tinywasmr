@@ -60,4 +60,14 @@ class BinaryModuleParserTest {
 		instance.export("main").asFunction().exec(hitter);
 		assertEquals(1, hits.get());
 	}
+
+	@Test
+	void testBranching() {
+		ParsedWasmModule module = load("binary/004_branching.wasm");
+		Instance instance = new DefaultInstance(module, null);
+		Object[] result = instance.export("main").asFunction().execToArray();
+		assertEquals(1, result[0]);
+		assertEquals(3, result[1]);
+		assertEquals(4, result[2]);
+	}
 }

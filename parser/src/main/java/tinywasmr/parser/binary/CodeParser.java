@@ -15,6 +15,8 @@ import tinywasmr.engine.exec.value.Vector128Value;
 import tinywasmr.engine.insn.ConstInsn;
 import tinywasmr.engine.insn.Instruction;
 import tinywasmr.engine.insn.control.BlockInsn;
+import tinywasmr.engine.insn.control.BranchIfInsn;
+import tinywasmr.engine.insn.control.BranchInsn;
 import tinywasmr.engine.insn.control.CallIndirectInsn;
 import tinywasmr.engine.insn.control.CallInsn;
 import tinywasmr.engine.insn.control.ControlInsn;
@@ -279,6 +281,15 @@ public class CodeParser {
 			};
 		}
 		case END: return null;
+		case BR:
+		case BR_IF: {
+			int idx = StreamReader.readUint32Var(stream);
+			return switch (insn) {
+			case BR -> $ -> new BranchInsn(idx);
+			case BR_IF -> $ -> new BranchIfInsn(idx);
+			default -> throw new RuntimeException("Unreachable");
+			};
+		}
 		case RETURN: return $ -> ControlInsn.RETURN;
 		case CALL: {
 			int idx = StreamReader.readUint32Var(stream);
@@ -313,7 +324,7 @@ public class CodeParser {
 			int index = StreamReader.readUint32Var(stream);
 			return $ -> new LocalInsn(type, index);
 		}
-		
+
 		// Table instructions
 		case TABLE_GET:
 		case TABLE_SET:
@@ -345,7 +356,7 @@ public class CodeParser {
 			};
 			return $ -> new ConstInsn(val);
 		}
-		
+
 		case I32_EQZ: return $ -> NumericUnaryOpInsn.I32_EQZ;
 		case I32_EQ: return $ -> NumericBinaryOpInsn.I32_EQ;
 		case I32_NE: return $ -> NumericBinaryOpInsn.I32_NE;
