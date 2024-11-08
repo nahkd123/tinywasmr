@@ -11,6 +11,10 @@ public class DefaultMemory implements Memory {
 		this.pages = new byte[pages][PAGE_SIZE];
 	}
 
+	public DefaultMemory(int pages) {
+		this(null, pages);
+	}
+
 	public DefaultMemory(MemoryDecl decl) {
 		this(decl, decl.type().limit().allocSize());
 	}

@@ -23,6 +23,13 @@ public class DefaultTable implements Table {
 		this(declaration, declaration.type().limit().allocSize());
 	}
 
+	public DefaultTable(TableType type, int size) {
+		this.declaration = null;
+		this.type = type;
+		this.refType = type.refType();
+		this.values = new RefValue[size];
+	}
+
 	@Override
 	public TableDecl declaration() {
 		return declaration;

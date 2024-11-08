@@ -71,9 +71,7 @@ public class DefaultInstance implements Instance {
 				if (table.size() < imp.type().limit().min())
 					throw new IllegalArgumentException("Imported table %s::%s does not have required size: %s"
 						.formatted(mod, name, imp.type().limit()));
-
-				// Foreign table declaration
-				declToTable.put(table.declaration(), table);
+				if (table.declaration() != null) declToTable.put(table.declaration(), table);
 			} else {
 				throw new IllegalArgumentException("Unable to resolve table declaration for %s"
 					.formatted(decl.getClass().getName()));
@@ -97,6 +95,7 @@ public class DefaultInstance implements Instance {
 				if (memory.pageCount() < imp.type().limit().min())
 					throw new IllegalArgumentException("Imported memory %s::%s does not have required size: %s"
 						.formatted(mod, name, imp.type().limit()));
+				if (memory.declaration() != null) declToMemory.put(memory.declaration(), memory);
 			} else {
 				throw new IllegalArgumentException("Unable to resolve memory declaration for %s"
 					.formatted(decl.getClass().getName()));
@@ -120,7 +119,7 @@ public class DefaultInstance implements Instance {
 					throw new IllegalArgumentException("Imported function %s::%s type mismatch: %s (decl) != %s"
 						.formatted(mod, name, type, function.type()));
 
-				// Foreign function declaration
+				// Function always have foreign declaration
 				declToFunction.put(function.declaration(), function);
 			} else {
 				function = new Function(this, decl);
