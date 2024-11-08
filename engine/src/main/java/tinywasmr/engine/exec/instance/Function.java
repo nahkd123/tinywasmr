@@ -38,23 +38,20 @@ public record Function(Instance instance, FunctionDecl declaration) implements E
 	 */
 	public Object[] executeToArray(Object[] params) {
 		List<ValueType> paramTypes = declaration.type().inputs().types();
-		if (params.length != paramTypes.size())
-			throw new IllegalArgumentException("Expecting %d params"
-				.formatted(declaration.type().inputs().types().size()));
+		List<ValueType> resultTypes = declaration.type().outputs().types();
+
+		if (params.length != paramTypes.size()) throw new IllegalArgumentException("Expecting %d params, found %d"
+			.formatted(paramTypes.size(), params.length));
 
 		Value[] inputs = new Value[params.length];
-
-		for (int i = 0; i < inputs.length; i++) {
-			Value val = Value.mapFromJava(params[i]);
-			if (!val.type().equals(paramTypes.get(i)))
-				throw new IllegalArgumentException("Type mismatch at #%d: %s (call) != %s (declared)"
-					.formatted(i, val.type(), paramTypes.get(i)));
-			inputs[i] = val;
-		}
+		for (int i = 0; i < inputs.length; i++) inputs[i] = paramTypes.get(i).mapFromJava(params[i]);
 
 		Value[] outputs = new DefaultExecutor().execute(this, inputs);
+		if (outputs.length != resultTypes.size()) throw new IllegalArgumentException("Expecting %d results, found %d"
+			.formatted(resultTypes.size(), outputs.length));
+
 		Object[] results = new Object[outputs.length];
-		for (int i = 0; i < outputs.length; i++) results[i] = outputs[i].mapToJava();
+		for (int i = 0; i < outputs.length; i++) results[i] = resultTypes.get(i).mapToJava(outputs[i]);
 		return results;
 	}
 

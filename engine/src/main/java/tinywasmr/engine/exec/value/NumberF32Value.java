@@ -28,9 +28,4 @@ public record NumberF32Value(float f32) implements Value {
 	public double f64() {
 		return f32;
 	}
-
-	@Override
-	public Object mapToJava() {
-		return f32;
-	}
 }

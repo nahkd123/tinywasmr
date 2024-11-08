@@ -77,7 +77,7 @@ public interface ExternalFunctionDecl extends FunctionDecl {
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			@Override
 			public Value[] onExec(Instance instance, Value[] params) {
-				((Consumer) consumer).accept(params[0].mapToJava());
+				((Consumer) consumer).accept(p1.mapToJava(params[0]));
 				return VOID;
 			}
 		};
@@ -95,7 +95,7 @@ public interface ExternalFunctionDecl extends FunctionDecl {
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			@Override
 			public Value[] onExec(Instance instance, Value[] params) {
-				((BiConsumer) consumer).accept(params[0].mapToJava(), params[1].mapToJava());
+				((BiConsumer) consumer).accept(p1.mapToJava(params[0]), p2.mapToJava(params[1]));
 				return VOID;
 			}
 		};
@@ -112,7 +112,7 @@ public interface ExternalFunctionDecl extends FunctionDecl {
 
 			@Override
 			public Value[] onExec(Instance instance, Value[] params) {
-				return new Value[] { Value.mapFromJava(supplier.get()) };
+				return new Value[] { ret.mapFromJava(supplier.get()) };
 			}
 		};
 	}
@@ -129,7 +129,7 @@ public interface ExternalFunctionDecl extends FunctionDecl {
 			@SuppressWarnings({ "rawtypes", "unchecked" })
 			@Override
 			public Value[] onExec(Instance instance, Value[] params) {
-				return new Value[] { Value.mapFromJava(((Function) f).apply(params[0].mapToJava())) };
+				return new Value[] { ret.mapFromJava(((Function) f).apply(p1.mapToJava(params[0]))) };
 			}
 		};
 	}
@@ -147,9 +147,9 @@ public interface ExternalFunctionDecl extends FunctionDecl {
 			@Override
 			public Value[] onExec(Instance instance, Value[] params) {
 				return new Value[] {
-					Value.mapFromJava(((BiFunction) f).apply(
-						params[0].mapToJava(),
-						params[1].mapToJava())) };
+					ret.mapFromJava(((BiFunction) f).apply(
+						p1.mapToJava(params[0]),
+						p2.mapToJava(params[1]))) };
 			}
 		};
 	}

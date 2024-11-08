@@ -36,11 +36,6 @@ public record Vector128Value(long msb, long lsb) implements Value {
 		return lsb;
 	}
 
-	@Override
-	public Object mapToJava() {
-		return new long[] { msb, lsb };
-	}
-
 	// Vector operations
 	public Vector128Value not() {
 		return new Vector128Value(~msb, ~lsb);

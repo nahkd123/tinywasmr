@@ -10,11 +10,6 @@ public interface RefValue extends Value {
 	Object get();
 
 	@Override
-	default Object mapToJava() {
-		return get();
-	}
-
-	@Override
 	default boolean condition() {
 		return get() != null;
 	}
