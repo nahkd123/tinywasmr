@@ -8,4 +8,9 @@ public record FunctionType(ResultType inputs, ResultType outputs) {
 	public FunctionType(ValueType[] inputs, ValueType[] outputs) {
 		this(new ResultType(List.of(inputs)), new ResultType(List.of(outputs)));
 	}
+
+	@Override
+	public final String toString() {
+		return "%s -> %s".formatted(inputs, outputs);
+	}
 }

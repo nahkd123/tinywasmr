@@ -8,6 +8,7 @@ It's not ready for production use yet; please come back later.
 - [Documentations][docs]
 	+ [Engine](./docs/engine/index.md)
 	+ Parser
+	+ External helper
 	+ Probe tool
 	+ Trace tool
 
@@ -164,6 +165,7 @@ With runtime validation, the VM will validates the value types to ensure they ar
 ## TinyWasmR components
 - `engine`: The engine part (a.k.a the virtual machine). Contains virtual machine.
 - `parser`: WebAssembly binary and text parser. Parses your module to `WasmModule`.
+- `extern`: External helper component. Make your life easier with reflection tricks. May not work well with AoT (Ahead-of-time) compilers (which is why it is separated from `engine`).
 - `probe`: WebAssembly module probing tool. Basically like disassembler, but with different syntax.
 - `trace`: WebAssembly execution tracing tool (also known as debugging tool). Trace the execution of the function, like watching the frames stack, operands stack, locals, tables and memories for example. You can even mess around with them while the module is running.
 

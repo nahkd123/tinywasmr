@@ -42,11 +42,11 @@ class BinaryModuleParserTest {
 		ParsedWasmModule module = load("binary/002_importfunc.wasm");
 		Instance instance = new DefaultInstance(module, SimpleImporter.builder()
 			.module("myModule", mod -> mod
-				.<Integer>addVoidFunc("printI32", NumberType.I32, i -> {
-					assertEquals(answer, i);
+				.addVoidFunc("printI32", NumberType.I32, i -> {
 					hits.incrementAndGet();
+					assertEquals(answer, i);
 				})
-				.<Integer>addFunc("answer", NumberType.I32, () -> answer))
+				.addFunc("answer", NumberType.I32, () -> answer))
 			.build());
 		instance.export("main").asFunction().exec();
 		assertEquals(1, hits.get());

@@ -14,7 +14,7 @@ import tinywasmr.engine.type.FunctionType;
 import tinywasmr.engine.type.GlobalType;
 import tinywasmr.engine.type.Limit;
 import tinywasmr.engine.type.MemoryType;
-import tinywasmr.engine.type.Mutablity;
+import tinywasmr.engine.type.Mutability;
 import tinywasmr.engine.type.ResultType;
 import tinywasmr.engine.type.TableType;
 import tinywasmr.engine.type.value.NumberType;
@@ -256,9 +256,9 @@ public class StreamReader {
 	public static GlobalType parseGlobalType(InputStream stream) throws IOException {
 		ValueType valueType = parseValueType(stream);
 		int mutablityId = stream.read();
-		Mutablity mutablity = switch (mutablityId) {
-		case 0x00 -> Mutablity.CONST;
-		case 0x01 -> Mutablity.VAR;
+		Mutability mutablity = switch (mutablityId) {
+		case 0x00 -> Mutability.CONST;
+		case 0x01 -> Mutability.VAR;
 		case -1 -> throw new EOFException();
 		default -> throw new IOException("Mutablity type not implemented: 0x%02x".formatted(mutablityId));
 		};

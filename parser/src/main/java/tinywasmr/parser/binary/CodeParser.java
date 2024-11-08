@@ -227,6 +227,12 @@ public class CodeParser {
 	public static final int REF_IS_NULL = 0xD1;
 	public static final int REF_FUNC = 0xD2;
 
+	// Memory instructions (extended)
+	public static final int MEMORY_INIT = 0xFC08;
+	public static final int DATA_DROP = 0xFC09;
+	public static final int MEMORY_COPY = 0xFC0A;
+	public static final int MEMORY_FILL = 0xFC0B;
+
 	// Table instructions (extended)
 	public static final int TABLE_INIT = 0xFC0C;
 	public static final int ELEM_DROP = 0xFC0D;

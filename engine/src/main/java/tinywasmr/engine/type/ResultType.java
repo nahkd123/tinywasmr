@@ -2,6 +2,7 @@ package tinywasmr.engine.type;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import tinywasmr.engine.type.value.ValueType;
 
@@ -23,5 +24,12 @@ public record ResultType(List<ValueType> types) implements BlockType {
 	@Override
 	public List<ValueType> blockResults() {
 		return types;
+	}
+
+	@Override
+	public final String toString() {
+		if (types.size() == 0) return "void";
+		if (types.size() == 1) return types.get(0).toString();
+		return "(%s)".formatted(types.stream().map(ValueType::toString).collect(Collectors.joining(", ")));
 	}
 }

@@ -1,6 +1,6 @@
 package tinywasmr.engine.type;
 
-public enum Mutablity {
+public enum Mutability {
 	CONST,
 	VAR;
 }

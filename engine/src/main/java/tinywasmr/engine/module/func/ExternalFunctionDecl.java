@@ -7,7 +7,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import tinywasmr.engine.exec.instance.ExternalInstance;
 import tinywasmr.engine.exec.instance.Instance;
 import tinywasmr.engine.exec.value.Value;
 import tinywasmr.engine.type.FunctionType;
@@ -35,10 +34,10 @@ public interface ExternalFunctionDecl extends FunctionDecl {
 	 * operand stack, allowing the WebAssembly module to consume the results.
 	 * </p>
 	 * 
-	 * @param instance The instance, usually {@link ExternalInstance} or
-	 *                 {@code null}. You can use this to determine the import
-	 *                 origin, or don't use it at all. The value is {@code null} if
-	 *                 the external function is imported without instance.
+	 * @param instance The instance, usually external instance or {@code null}. You
+	 *                 can use this to determine the import origin, or don't use it
+	 *                 at all. The value is {@code null} if the external function is
+	 *                 imported without instance.
 	 * @param params   The parameters collected from operand stack. The number of
 	 *                 values is equals to the size of inputs declared in
 	 *                 {@link #type()}.

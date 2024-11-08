@@ -79,6 +79,11 @@ public record SimpleImporter(Map<String, Object> objects) implements Importer {
 			callback.accept(new ModuleBuilder(this, name));
 			return this;
 		}
+
+		public Builder module(String module, Instance instance) {
+			for (Export export : instance.exports()) map.put(key(module, export.name()), export.value());
+			return this;
+		}
 	}
 
 	public static class ModuleBuilder {

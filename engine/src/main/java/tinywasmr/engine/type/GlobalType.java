@@ -2,5 +2,5 @@ package tinywasmr.engine.type;
 
 import tinywasmr.engine.type.value.ValueType;
 
-public record GlobalType(Mutablity mutablity, ValueType valType) {
+public record GlobalType(Mutability mutablity, ValueType valType) {
 }

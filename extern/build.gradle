@@ -1,0 +1,8 @@
+dependencies {
+    testImplementation libs.junit.jupiter
+    implementation project(':engine')
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
