@@ -3,13 +3,14 @@ package tinywasmr.engine.exec.executor;
 import java.util.List;
 
 import tinywasmr.engine.exec.StepResult;
+import tinywasmr.engine.exec.ValidationException;
 import tinywasmr.engine.exec.frame.BlockFrame;
 import tinywasmr.engine.exec.frame.Frame;
 import tinywasmr.engine.exec.trap.ExternalTrap;
 import tinywasmr.engine.exec.value.Value;
 import tinywasmr.engine.exec.vm.Machine;
-import tinywasmr.engine.insn.Instruction;
 import tinywasmr.engine.insn.control.LoopInsn;
+import tinywasmr.engine.type.value.ValueType;
 
 /**
  * <p>
@@ -20,31 +21,42 @@ public class DefaultExecutor implements Executor {
 	@Override
 	public StepResult step(Machine vm) {
 		if (vm.getTrap() != null) return StepResult.TRAP;
-		Frame frame = vm.peekFrame();
-
-		if (frame == vm.getExternalFrame()) {
+		if (vm.peekFrame() == vm.getExternalFrame()) {
 			vm.setTrap(new ExternalTrap(new IllegalStateException("Can't step in external frame")));
 			return StepResult.TRAP;
 		}
 
-		List<Instruction> insns = frame.getExecutingInsns();
-
-		while (frame.getInsnIndex() >= insns.size()) {
-			vm.popFrame();
-
-			if (frame instanceof BlockFrame blockFrame && blockFrame.getBlock() instanceof LoopInsn loop) {
+		while (vm.peekFrame().getInsnIndex() >= vm.peekFrame().getExecutingInsns().size()) {
+			if (vm.peekFrame() instanceof BlockFrame blockFrame && blockFrame.getBlock() instanceof LoopInsn loop) {
+				vm.popFrame();
 				loop.execute(vm);
 				return StepResult.NORMAL;
-			} else {
-				for (Value val : frame.getOperandStack()) vm.peekFrame().pushOperand(val);
-				frame = vm.peekFrame();
 			}
 
-			if (frame == vm.getExternalFrame()) return StepResult.NORMAL;
+			List<ValueType> resultTypes = vm.peekFrame().getBranchResultTypes().blockResults();
+			Value[] results = new Value[resultTypes.size()];
+
+			for (int i = results.length - 1; i >= 0; i--) {
+				Value val = vm.peekFrame().popOprand();
+
+				if (vm.hasRuntimeValidation() && !val.type().equals(resultTypes.get(i))) {
+					vm.setTrap(new ExternalTrap(new ValidationException("Type mismatch: %s (stack) != %s (bresult)"
+						.formatted(val.type(), resultTypes.get(i)))));
+					return StepResult.TRAP;
+				}
+
+				results[i] = val;
+			}
+
+			vm.popFrame();
+			for (Value val : results) vm.peekFrame().pushOperand(val);
+			if (vm.peekFrame() == vm.getExternalFrame()) return StepResult.NORMAL;
 		}
 
+		Frame frame = vm.peekFrame();
+
 		try {
-			insns.get(frame.getInsnIndex()).execute(vm);
+			frame.getExecutingInsns().get(frame.getInsnIndex()).execute(vm);
 			return StepResult.NORMAL;
 		} catch (Throwable e) {
 			vm.setTrap(new ExternalTrap(e));
