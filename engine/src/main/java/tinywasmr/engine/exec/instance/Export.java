@@ -1,5 +1,6 @@
 package tinywasmr.engine.exec.instance;
 
+import tinywasmr.engine.exec.memory.Memory;
 import tinywasmr.engine.exec.table.Table;
 import tinywasmr.engine.module.export.ExportDecl;
 
@@ -21,5 +22,10 @@ public record Export(ExportDecl declaration, String name, Exportable value) {
 	public Table asTable() {
 		if (value() instanceof Table table) return table;
 		throw new IllegalArgumentException("This export is not a table");
+	}
+
+	public Memory asMemory() {
+		if (value() instanceof Memory memory) return memory;
+		throw new IllegalArgumentException("This export is not a memory");
 	}
 }

@@ -22,6 +22,13 @@ import tinywasmr.engine.insn.control.CallInsn;
 import tinywasmr.engine.insn.control.ControlInsn;
 import tinywasmr.engine.insn.control.IfInsn;
 import tinywasmr.engine.insn.control.LoopInsn;
+import tinywasmr.engine.insn.memory.LoadInsn;
+import tinywasmr.engine.insn.memory.LoadType;
+import tinywasmr.engine.insn.memory.MemoryArg;
+import tinywasmr.engine.insn.memory.MemoryInsn;
+import tinywasmr.engine.insn.memory.MemoryInsnType;
+import tinywasmr.engine.insn.memory.StoreInsn;
+import tinywasmr.engine.insn.memory.StoreType;
 import tinywasmr.engine.insn.numeric.NumericBinaryOpInsn;
 import tinywasmr.engine.insn.numeric.NumericUnaryOpInsn;
 import tinywasmr.engine.insn.parametric.ParametricInsn;
@@ -75,6 +82,33 @@ public class CodeParser {
 	// Table instructions
 	public static final int TABLE_GET = 0x25;
 	public static final int TABLE_SET = 0x26;
+
+	// Memory instructions
+	public static final int I32_LOAD = 0x28;
+	public static final int I64_LOAD = 0x29;
+	public static final int F32_LOAD = 0x2A;
+	public static final int F64_LOAD = 0x2B;
+	public static final int I32_LOAD8_S = 0x2C;
+	public static final int I32_LOAD8_U = 0x2D;
+	public static final int I32_LOAD16_S = 0x2E;
+	public static final int I32_LOAD16_U = 0x2F;
+	public static final int I64_LOAD8_S = 0x30;
+	public static final int I64_LOAD8_U = 0x31;
+	public static final int I64_LOAD16_S = 0x32;
+	public static final int I64_LOAD16_U = 0x33;
+	public static final int I64_LOAD32_S = 0x34;
+	public static final int I64_LOAD32_U = 0x35;
+	public static final int I32_STORE = 0x36;
+	public static final int I64_STORE = 0x37;
+	public static final int F32_STORE = 0x38;
+	public static final int F64_STORE = 0x39;
+	public static final int I32_STORE8 = 0x3A;
+	public static final int I32_STORE16 = 0x3B;
+	public static final int I64_STORE8 = 0x3C;
+	public static final int I64_STORE16 = 0x3D;
+	public static final int I64_STORE32 = 0x3E;
+	public static final int MEMORY_SIZE = 0x3F;
+	public static final int MEMORY_GROW = 0x40;
 
 	// Numeric instructions
 	public static final int I32_CONST = 0x41;
@@ -341,6 +375,62 @@ public class CodeParser {
 			default -> throw new RuntimeException("Unreachable");
 			};
 		}
+
+		// Memory instructions
+		case I32_LOAD:
+		case I64_LOAD:
+		case F32_LOAD:
+		case F64_LOAD:
+		case I32_LOAD8_S:
+		case I32_LOAD8_U:
+		case I32_LOAD16_S:
+		case I32_LOAD16_U:
+		case I64_LOAD8_S:
+		case I64_LOAD8_U:
+		case I64_LOAD16_S:
+		case I64_LOAD16_U:
+		case I64_LOAD32_S:
+		case I64_LOAD32_U:
+		case I32_STORE:
+		case I64_STORE:
+		case F32_STORE:
+		case F64_STORE:
+		case I32_STORE8:
+		case I32_STORE16:
+		case I64_STORE8:
+		case I64_STORE16:
+		case I64_STORE32: {
+			MemoryArg memarg = StreamReader.parseMemarg(stream);
+			int idx = 0; // Always 0 for the time being
+			return switch (insn) {
+			case I32_LOAD -> view -> new LoadInsn(view.memories().get(idx), LoadType.I32, memarg);
+			case I64_LOAD -> view -> new LoadInsn(view.memories().get(idx), LoadType.I64, memarg);
+			case F32_LOAD -> view -> new LoadInsn(view.memories().get(idx), LoadType.F32, memarg);
+			case F64_LOAD -> view -> new LoadInsn(view.memories().get(idx), LoadType.F64, memarg);
+			case I32_LOAD8_S -> view -> new LoadInsn(view.memories().get(idx), LoadType.I32_S8, memarg);
+			case I32_LOAD8_U -> view -> new LoadInsn(view.memories().get(idx), LoadType.I32_U8, memarg);
+			case I32_LOAD16_S -> view -> new LoadInsn(view.memories().get(idx), LoadType.I32_S16, memarg);
+			case I32_LOAD16_U -> view -> new LoadInsn(view.memories().get(idx), LoadType.I32_U16, memarg);
+			case I64_LOAD8_S -> view -> new LoadInsn(view.memories().get(idx), LoadType. I64_S8, memarg);
+			case I64_LOAD8_U -> view -> new LoadInsn(view.memories().get(idx), LoadType. I64_U8, memarg);
+			case I64_LOAD16_S -> view -> new LoadInsn(view.memories().get(idx), LoadType.I64_S16, memarg);
+			case I64_LOAD16_U -> view -> new LoadInsn(view.memories().get(idx), LoadType.I64_U16, memarg);
+			case I64_LOAD32_S -> view -> new LoadInsn(view.memories().get(idx), LoadType.I64_S32, memarg);
+			case I64_LOAD32_U -> view -> new LoadInsn(view.memories().get(idx), LoadType.I64_U32, memarg);
+			case I32_STORE -> view -> new StoreInsn(view.memories().get(idx), StoreType.I32, memarg);
+			case I64_STORE -> view -> new StoreInsn(view.memories().get(idx), StoreType.I64, memarg);
+			case F32_STORE -> view -> new StoreInsn(view.memories().get(idx), StoreType.F32, memarg);
+			case F64_STORE -> view -> new StoreInsn(view.memories().get(idx), StoreType.F64, memarg);
+			case I32_STORE8 -> view -> new StoreInsn(view.memories().get(idx), StoreType.I32_I8, memarg);
+			case I32_STORE16 -> view -> new StoreInsn(view.memories().get(idx), StoreType.I32_I16, memarg);
+			case I64_STORE8 -> view -> new StoreInsn(view.memories().get(idx), StoreType.I64_I8, memarg);
+			case I64_STORE16 -> view -> new StoreInsn(view.memories().get(idx), StoreType.I64_I16, memarg);
+			case I64_STORE32 -> view -> new StoreInsn(view.memories().get(idx), StoreType.I64_I32, memarg);
+			default -> throw new RuntimeException("Unreachable");
+			};
+		}
+		case MEMORY_SIZE: return view -> new MemoryInsn(MemoryInsnType.SIZE, view.memories().get(0));
+		case MEMORY_GROW: return view -> new MemoryInsn(MemoryInsnType.GROW, view.memories().get(0));
 
 		// Numeric instructions
 		case I32_CONST:

@@ -9,6 +9,7 @@ import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.export.ExportDecl;
 import tinywasmr.engine.module.func.FunctionDecl;
 import tinywasmr.engine.module.imprt.ImportDecl;
+import tinywasmr.engine.module.memory.MemoryDecl;
 import tinywasmr.engine.module.table.TableDecl;
 
 public class ParsedWasmModule implements WasmModule {
@@ -16,6 +17,7 @@ public class ParsedWasmModule implements WasmModule {
 	private List<ImportDecl> imports = new ArrayList<>();
 	private List<ExportDecl> exports = new ArrayList<>();
 	private List<TableDecl> tables = new ArrayList<>();
+	private List<MemoryDecl> memories = new ArrayList<>();
 	private List<FunctionDecl> functions = new ArrayList<>();
 
 	@Override
@@ -36,6 +38,11 @@ public class ParsedWasmModule implements WasmModule {
 	@Override
 	public List<TableDecl> declaredTables() {
 		return tables;
+	}
+
+	@Override
+	public Collection<MemoryDecl> declaredMemories() {
+		return memories;
 	}
 
 	@Override

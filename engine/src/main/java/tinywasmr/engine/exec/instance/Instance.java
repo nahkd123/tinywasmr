@@ -1,12 +1,13 @@
 package tinywasmr.engine.exec.instance;
 
 import java.util.Collection;
-import java.util.List;
 
+import tinywasmr.engine.exec.memory.Memory;
 import tinywasmr.engine.exec.table.Table;
 import tinywasmr.engine.module.CustomSection;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.func.FunctionDecl;
+import tinywasmr.engine.module.memory.MemoryDecl;
 import tinywasmr.engine.module.table.TableDecl;
 
 /**
@@ -34,33 +35,27 @@ public interface Instance {
 		return module().custom();
 	}
 
-	/**
-	 * <p>
-	 * Get an ordered list of all functions that are imported, hidden and exported
-	 * from this instance. Ordered list is used here because functions in
-	 * WebAssembly binary are indexed, starting with imported functions then
-	 * declared functions.
-	 * </p>
-	 */
-	List<Function> functions();
+	Collection<Function> functions();
 
 	default Function function(FunctionDecl decl) {
 		for (Function function : functions()) if (function.declaration() == decl) return function;
 		return null;
 	}
 
-	List<Table> tables();
+	Collection<Table> tables();
 
 	default Table table(TableDecl decl) {
 		for (Table table : tables()) if (table.declaration() == decl) return table;
 		return null;
 	}
 
-	/**
-	 * <p>
-	 * Get a collection of exported symbols in this instance.
-	 * </p>
-	 */
+	Collection<Memory> memories();
+
+	default Memory memory(MemoryDecl decl) {
+		for (Memory memory : memories()) if (memory.declaration() == decl) return memory;
+		return null;
+	}
+
 	Collection<Export> exports();
 
 	/**

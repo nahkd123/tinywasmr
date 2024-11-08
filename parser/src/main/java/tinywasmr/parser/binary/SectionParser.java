@@ -9,6 +9,7 @@ import java.util.List;
 
 import tinywasmr.engine.module.CustomSection;
 import tinywasmr.engine.type.FunctionType;
+import tinywasmr.engine.type.MemoryType;
 import tinywasmr.engine.type.TableType;
 import tinywasmr.engine.type.value.ValueType;
 import tinywasmr.parser.binary.imprt.BinaryImport;
@@ -63,6 +64,13 @@ public class SectionParser {
 		TableType[] tables = new TableType[count];
 		for (int i = 0; i < count; i++) tables[i] = StreamReader.parseTableType(stream);
 		return tables;
+	}
+
+	public static MemoryType[] parseMemorySection(int size, InputStream stream) throws IOException {
+		int count = StreamReader.readUint32Var(stream);
+		MemoryType[] memories = new MemoryType[count];
+		for (int i = 0; i < count; i++) memories[i] = StreamReader.parseMemoryType(stream);
+		return memories;
 	}
 
 	public static BinaryImport[] parseImportSection(int size, InputStream stream) throws IOException {

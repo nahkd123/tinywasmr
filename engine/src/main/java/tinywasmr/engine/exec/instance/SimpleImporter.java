@@ -7,6 +7,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import tinywasmr.engine.exec.memory.Memory;
 import tinywasmr.engine.exec.table.Table;
 import tinywasmr.engine.module.func.ExternalFunctionDecl;
 import tinywasmr.engine.type.value.ValueType;
@@ -50,7 +51,15 @@ public record SimpleImporter(Map<String, Object> objects) implements Importer {
 	public Table importTable(String module, String name) {
 		Object obj = objects.get(key(module, name));
 		if (obj instanceof Table table) return table;
-		// TODO ArrayTableView - A view to RefValue[]
+		// TODO TableView - A view to RefValue[]
+		return null;
+	}
+
+	@Override
+	public Memory importMemory(String module, String name) {
+		Object obj = objects.get(key(module, name));
+		if (obj instanceof Memory memory) return memory;
+		// TODO MemoryView - A view to byte[]
 		return null;
 	}
 

@@ -17,14 +17,23 @@ import tinywasmr.engine.module.CustomSection;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.export.ExportDecl;
 import tinywasmr.engine.module.export.FunctionExportDescription;
+import tinywasmr.engine.module.export.MemoryExportDescription;
+import tinywasmr.engine.module.export.TableExportDescription;
 import tinywasmr.engine.module.func.FunctionDecl;
 import tinywasmr.engine.module.func.ImportFunctionDecl;
 import tinywasmr.engine.module.func.ModuleFunctionDecl;
 import tinywasmr.engine.module.imprt.FunctionImportDescription;
 import tinywasmr.engine.module.imprt.ImportDecl;
+import tinywasmr.engine.module.imprt.MemoryImportDescription;
+import tinywasmr.engine.module.imprt.TableImportDescription;
+import tinywasmr.engine.module.memory.ImportMemoryDecl;
+import tinywasmr.engine.module.memory.MemoryDecl;
+import tinywasmr.engine.module.memory.ModuleMemoryDecl;
+import tinywasmr.engine.module.table.ImportTableDecl;
 import tinywasmr.engine.module.table.ModuleTableDecl;
 import tinywasmr.engine.module.table.TableDecl;
 import tinywasmr.engine.type.FunctionType;
+import tinywasmr.engine.type.MemoryType;
 import tinywasmr.engine.type.TableType;
 import tinywasmr.parser.ParsedWasmModule;
 import tinywasmr.parser.binary.imprt.BinaryImport;
@@ -51,6 +60,7 @@ public class BinaryModuleParser {
 	private List<FunctionType> types;
 	private int[] functions;
 	private TableType[] tables;
+	private MemoryType[] memories;
 	private BinaryImport[] imports;
 	private BinaryExport[] exports;
 	private BinaryFunctionBody[] code;
@@ -104,6 +114,7 @@ public class BinaryModuleParser {
 		types = List.of();
 		functions = new int[0];
 		tables = new TableType[0];
+		memories = new MemoryType[0];
 		imports = new BinaryImport[0];
 		exports = new BinaryExport[0];
 		code = new BinaryFunctionBody[0];
@@ -152,7 +163,7 @@ public class BinaryModuleParser {
 		case 0x02: imports = SectionParser.parseImportSection(header.size(), stream); break;
 		case 0x03: functions = SectionParser.parseFunctionSection(header.size(), stream); break;
 		case 0x04: tables = SectionParser.parseTableSection(header.size(), stream); break;
-		case 0x05: throw new RuntimeException("0x05 memory section not implemented");
+		case 0x05: memories = SectionParser.parseMemorySection(header.size(), stream); break;
 		case 0x06: throw new RuntimeException("0x06 global section not implemented");
 		case 0x07: exports = SectionParser.parseExportSection(header.size(), stream); break;
 		case 0x08: throw new RuntimeException("0x08 start section not implemented");
@@ -174,7 +185,8 @@ public class BinaryModuleParser {
 		ParsedWasmModule module = new ParsedWasmModule();
 		List<FunctionDecl> functions = new ArrayList<>();
 		List<TableDecl> tables = new ArrayList<>();
-		BinaryModuleLayout indicesView = new BinaryModuleLayout(types, tables, functions);
+		List<MemoryDecl> memories = new ArrayList<>();
+		BinaryModuleLayout indicesView = new BinaryModuleLayout(types, tables, memories, functions);
 
 		// Resolving imports
 		List<ImportDecl> imports = Stream.of(this.imports)
@@ -183,6 +195,10 @@ public class BinaryModuleParser {
 		for (ImportDecl imp : imports) {
 			if (imp.description() instanceof FunctionImportDescription funcImport) {
 				functions.add(new ImportFunctionDecl(module, funcImport.type(), imp));
+			} else if (imp.description() instanceof TableImportDescription tableImport) {
+				tables.add(new ImportTableDecl(module, tableImport.type(), imp));
+			} else if (imp.description() instanceof MemoryImportDescription memoryImport) {
+				memories.add(new ImportMemoryDecl(module, memoryImport.type(), imp));
 			} else {
 				throw new RuntimeException("Not implemented: %s".formatted(imp.getClass()));
 			}
@@ -193,6 +209,12 @@ public class BinaryModuleParser {
 			.map(type -> new ModuleTableDecl(module, type))
 			.toList();
 		tables.addAll(moduleTables);
+
+		// Resolving declared memories
+		List<ModuleMemoryDecl> moduleMemories = Stream.of(this.memories)
+			.map(type -> new ModuleMemoryDecl(module, type))
+			.toList();
+		memories.addAll(moduleMemories);
 
 		// Resolving declared functions
 		List<ModuleFunctionDecl> moduleFunctions = IntStream.of(this.functions)
@@ -205,6 +227,8 @@ public class BinaryModuleParser {
 		List<ExportDecl> exports = Stream.of(this.exports)
 			.map(binary -> new ExportDecl(binary.name(), switch (binary.type()) {
 			case BinaryExport.TYPE_FUNC -> new FunctionExportDescription(functions.get(binary.index()));
+			case BinaryExport.TYPE_TABLE -> new TableExportDescription(tables.get(binary.index()));
+			case BinaryExport.TYPE_MEM -> new MemoryExportDescription(memories.get(binary.index()));
 			default -> throw new RuntimeException("Export type not implemented: 0x%02x".formatted(binary.type()));
 			}))
 			.toList();
@@ -223,6 +247,7 @@ public class BinaryModuleParser {
 		// Finalize
 		module.declaredImports().addAll(imports);
 		module.declaredTables().addAll(tables);
+		module.declaredMemories().addAll(memories);
 		module.declaredFunctions().addAll(functions);
 		module.declaredExports().addAll(exports);
 		return module;

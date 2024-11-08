@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import tinywasmr.engine.exec.value.Vector128Value;
+import tinywasmr.engine.insn.memory.MemoryArg;
 import tinywasmr.engine.type.BlockType;
 import tinywasmr.engine.type.FunctionType;
 import tinywasmr.engine.type.GlobalType;
@@ -293,5 +294,11 @@ public class StreamReader {
 		ValueType valueType = parseValueType(id);
 		if (valueType != null) return valueType;
 		throw new IOException("Block result opcode not implemented: 0x%02x".formatted(id));
+	}
+
+	public static MemoryArg parseMemarg(InputStream stream) throws IOException {
+		int align = readUint32Var(stream);
+		int offset = readUint32Var(stream);
+		return new MemoryArg(offset, align);
 	}
 }

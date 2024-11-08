@@ -13,6 +13,7 @@ import tinywasmr.engine.exec.instance.DefaultInstance;
 import tinywasmr.engine.exec.instance.Function;
 import tinywasmr.engine.exec.instance.Instance;
 import tinywasmr.engine.exec.instance.SimpleImporter;
+import tinywasmr.engine.exec.memory.Memory;
 import tinywasmr.engine.module.func.ExternalFunctionDecl;
 import tinywasmr.engine.type.value.NumberType;
 import tinywasmr.parser.ParsedWasmModule;
@@ -69,5 +70,15 @@ class BinaryModuleParserTest {
 		assertEquals(1, result[0]);
 		assertEquals(3, result[1]);
 		assertEquals(4, result[2]);
+	}
+
+	@Test
+	void testMemories() {
+		ParsedWasmModule module = load("binary/005_memories.wasm");
+		Instance instance = new DefaultInstance(module, null);
+		Memory memory = instance.export("memory").asMemory();
+		memory.writeI32(0, 727);
+		instance.export("main").asFunction().exec();
+		assertEquals(727 + 42, memory.readI32(0));
 	}
 }
