@@ -16,12 +16,20 @@ It's not ready for production use yet; please come back later.
 ```java
 // Parse from binary module
 InputStream stream = new FileInputStream("path/to/cool_module.wasm");
-WasmModule module = new BinaryModuleParser().parseModule(stream);
+WasmModule module = BinaryModuleParser.parse(stream);
 
 // Using our module
 // We are not importing functions to the module for the time being, so the 2nd param is null.
 // Instance holds the global variables, memories and tables. Each instance have a different set
 // of globals, memories and tables (so are their contents).
+Instance instance = new DefaultInstance(module, null);
+System.out.println(instance.export("addTwo").asFunction().exec(1, 2)); // => 3
+```
+
+That's a lot of noises. Let's remove all comments and witness the tiniest amount of code required to use WebAssembly module:
+
+```java
+WasmModule module = BinaryModuleParser.parse(new FileInputStream("path/to/cool_module.wasm"));
 Instance instance = new DefaultInstance(module, null);
 System.out.println(instance.export("addTwo").asFunction().exec(1, 2)); // => 3
 ```

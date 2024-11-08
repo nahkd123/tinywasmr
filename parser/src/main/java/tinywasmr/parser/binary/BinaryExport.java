@@ -4,7 +4,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
-record BinaryExport(String name, int type, int index) {
+public record BinaryExport(String name, int type, int index) {
 
 	public static final int TYPE_FUNC = 0x00;
 	public static final int TYPE_TABLE = 0x01;

@@ -13,23 +13,16 @@ import tinywasmr.engine.type.TableType;
 import tinywasmr.engine.type.value.ValueType;
 import tinywasmr.parser.binary.imprt.BinaryImport;
 
-class SectionParser {
-	public static SectionHeader parseSectionHeader(BinaryModuleParser moduleParser, InputStream stream) throws IOException {
-		moduleParser.getLogger().verbose("begin parsing section header");
+public class SectionParser {
+	public static SectionHeader parseSectionHeader(InputStream stream) throws IOException {
 		int id = stream.read();
 		if (id == -1) throw new EOFException();
 		int size = StreamReader.readUint32Var(stream);
-		moduleParser.getLogger().verbose("section 0x%02x, size = %d (guessing = %s)", id, size, size == 0);
-		moduleParser.getLogger().verbose("end parsing section header");
 		return new SectionHeader(id, size);
 	}
 
-	public static CustomSection parseCustomSection(BinaryModuleParser moduleParser, int size, InputStream stream) throws IOException {
-		moduleParser.getLogger().verbose("begin parsing custom section");
-
-		if (moduleParser.isIgnoreCustomSections()) {
-			moduleParser.getLogger().verbose("ignoring custom section");
-
+	public static CustomSection parseCustomSection(int size, InputStream stream, boolean ignore) throws IOException {
+		if (ignore) {
 			if (size != 0) {
 				stream.skipNBytes(size);
 				return null;
@@ -48,103 +41,61 @@ class SectionParser {
 		byte[] data;
 		if (size == 0) data = stream.readAllBytes();
 		else data = stream.readNBytes(size - counter.getCounter() - nameBs.length); // TODO: validation here?
-		moduleParser.getLogger().verbose("custom section %s, content size = %d", name, data.length);
-		moduleParser.getLogger().verbose("end parsing custom section");
 		return new CustomSection(name, data);
 	}
 
-	public static List<FunctionType> parseTypeSection(BinaryModuleParser moduleParser, int size, InputStream stream) throws IOException {
-		moduleParser.getLogger().verbose("begin parsing type section");
+	public static List<FunctionType> parseTypeSection(int size, InputStream stream) throws IOException {
 		int count = StreamReader.readUint32Var(stream);
 		List<FunctionType> types = new ArrayList<>();
-
-		for (int i = 0; i < count; i++) {
-			FunctionType functionType = moduleParser.parseFunctionType(stream);
-			types.add(functionType);
-		}
-
-		moduleParser.getLogger().verbose("type section %d types", count);
-		moduleParser.getLogger().verbose("end parsing type section");
+		for (int i = 0; i < count; i++) types.add(StreamReader.parseFunctionType(stream));
 		return types;
 	}
 
-	public static int[] parseFunctionSection(BinaryModuleParser moduleParser, int size, InputStream stream) throws IOException {
-		moduleParser.getLogger().verbose("begin parsing function section");
+	public static int[] parseFunctionSection(int size, InputStream stream) throws IOException {
 		int count = StreamReader.readUint32Var(stream);
 		int[] functionTypeRefs = new int[count];
 		for (int i = 0; i < count; i++) functionTypeRefs[i] = StreamReader.readUint32Var(stream);
-		moduleParser.getLogger().verbose("function section %d functions", count);
-		moduleParser.getLogger().verbose("end parsing function section");
 		return functionTypeRefs;
 	}
 
-	public static TableType[] parseTableSection(BinaryModuleParser moduleParser, int size, InputStream stream) throws IOException {
-		moduleParser.getLogger().verbose("begin parsing table section");
+	public static TableType[] parseTableSection(int size, InputStream stream) throws IOException {
 		int count = StreamReader.readUint32Var(stream);
 		TableType[] tables = new TableType[count];
-		moduleParser.getLogger().verbose("table section %d tables", count);
-
-		for (int i = 0; i < count; i++) {
-			tables[i] = moduleParser.parseTableType(stream);
-			moduleParser.getLogger().verbose("  table #%d: %s of %s", i, tables[i].limit(), tables[i].refType());
-		}
-
-		moduleParser.getLogger().verbose("end parsing table section");
+		for (int i = 0; i < count; i++) tables[i] = StreamReader.parseTableType(stream);
 		return tables;
 	}
 
-	public static BinaryImport[] parseImportSection(BinaryModuleParser moduleParser, int size, InputStream stream) throws IOException {
-		moduleParser.getLogger().verbose("begin parsing import section");
+	public static BinaryImport[] parseImportSection(int size, InputStream stream) throws IOException {
 		int count = StreamReader.readUint32Var(stream);
 		BinaryImport[] imports = new BinaryImport[count];
-		moduleParser.getLogger().verbose("import section $d imports", count);
-
-		for (int i = 0; i < count; i++) {
-			imports[i] = BinaryImport.parse(moduleParser, stream);
-			moduleParser.getLogger().verbose("  import #%d: %s::%s", i, imports[i].module(), imports[i].name());
-		}
-
-		moduleParser.getLogger().verbose("end parsing import section");
+		for (int i = 0; i < count; i++) imports[i] = BinaryImport.parse(stream);
 		return imports;
 	}
 
-	public static BinaryExport[] parseExportSection(BinaryModuleParser moduleParser, int size, InputStream stream) throws IOException {
-		moduleParser.getLogger().verbose("begin parsing export section");
+	public static BinaryExport[] parseExportSection(int size, InputStream stream) throws IOException {
 		int count = StreamReader.readUint32Var(stream);
 		BinaryExport[] exports = new BinaryExport[count];
-		moduleParser.getLogger().verbose("export section $d exports", count);
-
-		for (int i = 0; i < count; i++) {
-			exports[i] = BinaryExport.parse(stream);
-			moduleParser.getLogger().verbose("  export #%d: %d -> %s", i, exports[i].index(), exports[i].name());
-		}
-
-		moduleParser.getLogger().verbose("end parsing export section");
+		for (int i = 0; i < count; i++) exports[i] = BinaryExport.parse(stream);
 		return exports;
 	}
 
-	public static BinaryFunctionBody[] parseCodeSection(BinaryModuleParser moduleParser, int size, InputStream stream) throws IOException {
-		moduleParser.getLogger().verbose("begin parsing code section");
+	public static BinaryFunctionBody[] parseCodeSection(int size, InputStream stream) throws IOException {
 		int count = StreamReader.readUint32Var(stream);
 		BinaryFunctionBody[] functions = new BinaryFunctionBody[count];
 
 		for (int i = 0; i < count; i++) {
-			int funcSize = StreamReader.readUint32Var(stream);
-			moduleParser.getLogger().verbose("function #%d: size = %d (guess = %s)", i, funcSize, funcSize == 0);
-
+			StreamReader.readUint32Var(stream); // function size in bytes, kept for side effect
 			BinaryFunctionBody body = new BinaryFunctionBody(new ArrayList<>(), new ArrayList<>());
 			int localsDeclCount = StreamReader.readUint32Var(stream);
-			moduleParser.getLogger().verbose("  %d local declarations", localsDeclCount);
 
 			for (int j = 0; j < localsDeclCount; j++) {
 				int multiples = StreamReader.readUint32Var(stream);
-				ValueType type = moduleParser.parseValueType(stream);
+				ValueType type = StreamReader.parseValueType(stream);
 				for (int k = 0; k < multiples; k++) body.locals().add(type);
-				moduleParser.getLogger().verbose("    %dx of %d", multiples, type);
 			}
 
 			while (true) {
-				InstructionBuilder insn = CodeParser.parseInsn(moduleParser, stream);
+				BinaryInstructionBuilder insn = CodeParser.parseInsn(stream);
 				if (insn != null) body.body().add(insn);
 				else break;
 			}
@@ -152,7 +103,6 @@ class SectionParser {
 			functions[i] = body;
 		}
 
-		moduleParser.getLogger().verbose("end parsing code section");
 		return functions;
 	}
 }

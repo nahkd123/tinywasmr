@@ -2,11 +2,11 @@ package tinywasmr.parser.binary.imprt;
 
 import tinywasmr.engine.module.imprt.FunctionImportDescription;
 import tinywasmr.engine.module.imprt.ImportDescription;
-import tinywasmr.parser.binary.BinaryIndicesView;
+import tinywasmr.parser.binary.BinaryModuleLayout;
 
-record BinaryFunctionImport(int typeIndex) implements BinaryImportDesc {
+public record BinaryFunctionImport(int typeIndex) implements BinaryImportDesc {
 	@Override
-	public ImportDescription build(BinaryIndicesView view) {
+	public ImportDescription build(BinaryModuleLayout view) {
 		return new FunctionImportDescription(view.types().get(typeIndex));
 	}
 }

@@ -13,6 +13,7 @@ import tinywasmr.engine.exec.value.NumberI64Value;
 import tinywasmr.engine.exec.value.Value;
 import tinywasmr.engine.exec.value.Vector128Value;
 import tinywasmr.engine.insn.ConstInsn;
+import tinywasmr.engine.insn.Instruction;
 import tinywasmr.engine.insn.control.BlockInsn;
 import tinywasmr.engine.insn.control.CallIndirectInsn;
 import tinywasmr.engine.insn.control.CallInsn;
@@ -34,13 +35,14 @@ import tinywasmr.engine.type.ResultType;
 import tinywasmr.engine.type.value.RefType;
 import tinywasmr.engine.type.value.ValueType;
 
+/**
+ * <p>
+ * Code parser parses from byte stream into instruction builder. This also
+ * contains the opcodes for all instructions, in case you want to build binary
+ * module from ground up.
+ * </p>
+ */
 public class CodeParser {
-	public static InstructionBuilder parseInsn(BinaryModuleParser moduleParser, InputStream stream) throws IOException {
-		int insn = stream.read();
-		if (insn == -1) return null;
-		return parseInsn(moduleParser, insn, stream);
-	}
-
 	// Control instructions
 	public static final int UNREACHABLE = 0x00;
 	public static final int NOP = 0x01;
@@ -200,7 +202,41 @@ public class CodeParser {
 	// Vector instructions
 	public static final int V128_CONST = 0xFD0C;
 
-	public static InstructionBuilder parseInsn(BinaryModuleParser moduleParser, int insn, InputStream stream) throws IOException {
+	/**
+	 * <p>
+	 * Parse an instruction from byte stream.
+	 * </p>
+	 * 
+	 * @param stream A byte stream to read instruction opcode and possibly constant
+	 *               values.
+	 * @return An instruction builder, which takes in a view of module's layout in
+	 *         order to fully expand into {@link Instruction}.
+	 * @throws IOException if I/O operation error occurred or end of stream reached.
+	 */
+	public static BinaryInstructionBuilder parseInsn(InputStream stream) throws IOException {
+		int insn = stream.read();
+		if (insn == -1) return null;
+		return parseInsn(insn, stream);
+	}
+
+	/**
+	 * <p>
+	 * Parse an instruction. Most single-byte opcodes does not need a stream. Most
+	 * multi-byte opcodes require a byte stream to read next byte, unless the opcode
+	 * is already expanded, like {@link #TABLE_SIZE} for example.
+	 * </p>
+	 * 
+	 * @param insn   The code of instruction. You can obtain one from the constants
+	 *               defined in {@link CodeParser}, or parse from stream by reading
+	 *               a single byte.
+	 * @param stream A byte stream to read in constant value(s) for specific
+	 *               instruction. Most instructions does not need a stream, like
+	 *               {@link #I32_ADD} for example.
+	 * @return An instruction builder, which takes in a view of module's layout in
+	 *         order to fully expand into {@link Instruction}.
+	 * @throws IOException if I/O operation error occurred or end of stream reached.
+	 */
+	public static BinaryInstructionBuilder parseInsn(int insn, InputStream stream) throws IOException {
 		// @formatter:off
 		switch (insn) {
 		// Control instructions
@@ -209,10 +245,10 @@ public class CodeParser {
 		case BLOCK:
 		case LOOP:
 		case IF: {
-			Object blockType = moduleParser.parseBlockType(stream);
-			List<InstructionBuilder> primary = new ArrayList<>();
-			List<InstructionBuilder> secondary = new ArrayList<>();
-			List<InstructionBuilder> current = primary;
+			Object blockType = StreamReader.parseBlockType(stream);
+			List<BinaryInstructionBuilder> primary = new ArrayList<>();
+			List<BinaryInstructionBuilder> secondary = new ArrayList<>();
+			List<BinaryInstructionBuilder> current = primary;
 			int childInsn;
 
 			while (true) {
@@ -226,7 +262,7 @@ public class CodeParser {
 					current = secondary;
 				}
 
-				InstructionBuilder builder = parseInsn(moduleParser, childInsn, stream);
+				BinaryInstructionBuilder builder = parseInsn(childInsn, stream);
 				current.add(builder);
 			}
 
@@ -258,7 +294,7 @@ public class CodeParser {
 		case DROP: return $ -> ParametricInsn.DROP;
 		case SELECT_AUTO: return $ -> ParametricInsn.SELECT_AUTO;
 		case SELECT_EXPLICT: {
-			ResultType resultType = moduleParser.parseResultType(stream);
+			ResultType resultType = StreamReader.parseResultType(stream);
 			if (resultType.types().size() != 1) throw new IOException("Explict select requires exactly 1 result, found %s".formatted(resultType.types()));
 			return $ -> new SelectExplictInsn(resultType.types().get(0));
 		}
@@ -414,7 +450,7 @@ public class CodeParser {
 
 		// Reference instructions
 		case REF_NULL: {
-			ValueType type = moduleParser.parseValueType(stream);
+			ValueType type = StreamReader.parseValueType(stream);
 			if (!(type instanceof RefType refType)) throw new IOException("Expected funcref or externref, but found %s".formatted(type));
 			return switch (refType) {
 			case EXTERN -> $ -> RefInsn.NULL_EXTERN;
@@ -439,7 +475,7 @@ public class CodeParser {
 		case 0xFD: {
 			int second = stream.read();
 			if (second == -1) throw new EOFException("EOF while reading 2nd byte of multi-byte instruction (0x%2x...)".formatted(insn));
-			return parseInsn(moduleParser, insn << 8 | second, stream);
+			return parseInsn(insn << 8 | second, stream);
 		}
 
 		default: throw new RuntimeException("Instruction not implemented: 0x%02x".formatted(insn));

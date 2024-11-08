@@ -4,9 +4,28 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import tinywasmr.engine.exec.value.Vector128Value;
+import tinywasmr.engine.type.BlockType;
+import tinywasmr.engine.type.FunctionType;
+import tinywasmr.engine.type.GlobalType;
+import tinywasmr.engine.type.Limit;
+import tinywasmr.engine.type.MemoryType;
+import tinywasmr.engine.type.Mutablity;
+import tinywasmr.engine.type.ResultType;
+import tinywasmr.engine.type.TableType;
+import tinywasmr.engine.type.value.NumberType;
+import tinywasmr.engine.type.value.RefType;
+import tinywasmr.engine.type.value.ValueType;
+import tinywasmr.engine.type.value.VectorType;
 
+/**
+ * <p>
+ * A reader to read various type of data from {@link InputStream}.
+ * </p>
+ */
 public class StreamReader {
 	public static int readInt32LE(InputStream stream) throws IOException {
 		byte[] bs = stream.readNBytes(4);
@@ -165,5 +184,114 @@ public class StreamReader {
 		byte[] bs = stream.readNBytes(len);
 		if (bs.length != len) throw new IOException("Expected %d bytes but only %d found".formatted(len, bs.length));
 		return new String(bs, StandardCharsets.UTF_8);
+	}
+
+	public static ValueType parseValueType(int id) throws IOException {
+		return switch (id) {
+		case 0x7f -> NumberType.I32;
+		case 0x7e -> NumberType.I64;
+		case 0x7d -> NumberType.F32;
+		case 0x7c -> NumberType.F64;
+		case 0x7b -> VectorType.V128;
+		case 0x70 -> RefType.FUNC;
+		case 0x6f -> RefType.EXTERN;
+		default -> null;
+		};
+	}
+
+	public static ValueType parseValueType(InputStream stream) throws IOException {
+		int id = stream.read();
+		if (id == -1) throw new EOFException();
+		ValueType valueType = parseValueType(id);
+		if (valueType == null) throw new IOException("Value type not implemented: 0x%02x".formatted(id));
+		return valueType;
+	}
+
+	public static ResultType parseResultType(InputStream stream) throws IOException {
+		int len = StreamReader.readUint32Var(stream);
+		List<ValueType> types = new ArrayList<>();
+		for (int i = 0; i < len; i++) types.add(parseValueType(stream));
+		return new ResultType(types);
+	}
+
+	public static FunctionType parseFunctionType(int id, InputStream stream) throws IOException {
+		if (id != 0x60) return null;
+		ResultType params = parseResultType(stream);
+		ResultType results = parseResultType(stream);
+		return new FunctionType(params, results);
+	}
+
+	public static FunctionType parseFunctionType(InputStream stream) throws IOException {
+		int id = stream.read();
+		if (id == -1) throw new EOFException();
+		FunctionType functionType = parseFunctionType(id, stream);
+		if (functionType == null)
+			throw new IOException("Function type ID must be 0x60, but 0x%02x found".formatted(id));
+		return functionType;
+	}
+
+	public static Limit parseLimit(InputStream stream) throws IOException {
+		int type = stream.read();
+		return switch (type) {
+		case 0x00 -> new Limit(StreamReader.readUint32Var(stream));
+		case 0x01 -> new Limit(StreamReader.readUint32Var(stream), StreamReader.readUint32Var(stream));
+		case -1 -> throw new EOFException();
+		default -> throw new IOException("Limit type not implemented: 0x%02x".formatted(type));
+		};
+	}
+
+	public static MemoryType parseMemoryType(InputStream stream) throws IOException {
+		return new MemoryType(parseLimit(stream));
+	}
+
+	public static TableType parseTableType(InputStream stream) throws IOException {
+		ValueType valueType = parseValueType(stream); // TODO replace with parseRefType()
+		if (!(valueType instanceof RefType refType))
+			throw new IOException("Expected RefType, but %s found".formatted(valueType));
+		Limit limit = parseLimit(stream);
+		return new TableType(limit, refType);
+	}
+
+	public static GlobalType parseGlobalType(InputStream stream) throws IOException {
+		ValueType valueType = parseValueType(stream);
+		int mutablityId = stream.read();
+		Mutablity mutablity = switch (mutablityId) {
+		case 0x00 -> Mutablity.CONST;
+		case 0x01 -> Mutablity.VAR;
+		case -1 -> throw new EOFException();
+		default -> throw new IOException("Mutablity type not implemented: 0x%02x".formatted(mutablityId));
+		};
+		return new GlobalType(mutablity, valueType);
+	}
+
+	/**
+	 * <p>
+	 * Parse the block type from byte stream. The result can be any of the
+	 * following:
+	 * <ul>
+	 * <li>An {@code int} pointing to type that was declared in the module (we do
+	 * not know which type exactly, but we know the index of the type when building
+	 * the module).</li>
+	 * <li>{@link ResultType} that is empty, if the block type is empty.</li>
+	 * <li>A {@link ValueType} if the block only return a single value.</li>
+	 * </ul>
+	 * </p>
+	 * <p>
+	 * Note that both {@link ResultType} and {@link ValueType} implements
+	 * {@link BlockType}.
+	 * </p>
+	 * 
+	 * @param stream The byte stream to read from.
+	 * @return The parsed {@link BlockType} or {@code int}.
+	 * @throws IOException if I/O operation failed or end of file reached.
+	 */
+	public static Object parseBlockType(InputStream stream) throws IOException {
+		int id = StreamReader.readSint32Var(stream);
+		if (id >= 0) return id;
+		id = 0x80 + id;
+		if (id == 0x40) return new ResultType(List.of());
+		ValueType valueType = parseValueType(id);
+		if (valueType != null) return valueType;
+		throw new IOException("Block result opcode not implemented: 0x%02x".formatted(id));
 	}
 }

@@ -15,14 +15,12 @@ import tinywasmr.engine.exec.instance.Instance;
 import tinywasmr.engine.exec.instance.SimpleImporter;
 import tinywasmr.engine.module.func.ExternalFunctionDecl;
 import tinywasmr.engine.type.value.NumberType;
-import tinywasmr.engine.util.SystemLogger;
 import tinywasmr.parser.ParsedWasmModule;
 
 class BinaryModuleParserTest {
 	ParsedWasmModule load(String file) {
 		try (InputStream stream = getClass().getClassLoader().getResourceAsStream(file)) {
-			BinaryModuleParser parser = new BinaryModuleParser(new SystemLogger(false), false);
-			return parser.parseModule(stream);
+			return BinaryModuleParser.parse(stream);
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
