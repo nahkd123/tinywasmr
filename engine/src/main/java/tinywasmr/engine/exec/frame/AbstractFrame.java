@@ -48,4 +48,13 @@ public abstract class AbstractFrame implements Frame {
 	public void incInsnIndex(int count) {
 		insn += count;
 	}
+
+	@Override
+	public String toString() {
+		return "%s %s insn %04d -> %s".formatted(
+			getClass().getSimpleName(),
+			operands,
+			insn,
+			insn < getExecutingInsns().size() ? getExecutingInsns().get(insn) : "<end of block>");
+	}
 }

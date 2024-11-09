@@ -89,4 +89,10 @@ public record Function(Instance instance, FunctionDecl declaration) implements E
 	public Object exec(Object... params) {
 		return execute(params);
 	}
+
+	@Override
+	public final String toString() {
+		String tail = declaration.toString();
+		return (instance != null ? "" : "static ") + tail;
+	}
 }

@@ -56,4 +56,13 @@ public class FunctionFrame extends AbstractFrame {
 
 	@Override
 	public BlockType getBranchResultTypes() { return function.type().outputs(); }
+
+	@Override
+	public String toString() {
+		return "Function %s %s insn %04d -> %s".formatted(
+			function,
+			getOperandStack(),
+			getInsnIndex(),
+			getInsnIndex() < getExecutingInsns().size() ? getExecutingInsns().get(getInsnIndex()) : "<end of block>");
+	}
 }

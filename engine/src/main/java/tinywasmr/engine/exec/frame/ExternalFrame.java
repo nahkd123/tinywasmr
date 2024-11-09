@@ -21,4 +21,9 @@ public class ExternalFrame extends AbstractFrame {
 
 	@Override
 	public BlockType getBranchResultTypes() { return new ResultType(List.of()); }
+
+	@Override
+	public String toString() {
+		return "External %s".formatted(getOperandStack());
+	}
 }

@@ -28,4 +28,9 @@ public record NumberF32Value(float f32) implements Value {
 	public double f64() {
 		return f32;
 	}
+
+	@Override
+	public final String toString() {
+		return "f32 %d".formatted(f32);
+	}
 }
