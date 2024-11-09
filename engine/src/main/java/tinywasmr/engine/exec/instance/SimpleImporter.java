@@ -9,7 +9,8 @@ import java.util.function.Supplier;
 
 import tinywasmr.engine.exec.memory.Memory;
 import tinywasmr.engine.exec.table.Table;
-import tinywasmr.engine.module.func.ExternalFunctionDecl;
+import tinywasmr.engine.module.func.extern.ExternalFunctionDecl;
+import tinywasmr.engine.module.func.extern.HostOnlyFunctionDecl;
 import tinywasmr.engine.type.value.ValueType;
 
 /**
@@ -44,7 +45,7 @@ public record SimpleImporter(Map<String, Object> objects) implements Importer {
 		Object obj = objects.get(key(module, name));
 		if (obj instanceof Function function) return function;
 		if (obj instanceof ExternalFunctionDecl extern) return new Function(null, extern);
-		if (obj instanceof Runnable runnable) return new Function(null, ExternalFunctionDecl.ofVoid(runnable));
+		if (obj instanceof Runnable runnable) return new Function(null, HostOnlyFunctionDecl.ofVoid(runnable));
 		return null;
 	}
 
@@ -101,27 +102,27 @@ public record SimpleImporter(Map<String, Object> objects) implements Importer {
 		}
 
 		public ModuleBuilder addVoidFunc(String name, Runnable runnable) {
-			return add(name, ExternalFunctionDecl.ofVoid(runnable));
+			return add(name, HostOnlyFunctionDecl.ofVoid(runnable));
 		}
 
 		public <P1> ModuleBuilder addVoidFunc(String name, ValueType p1, Consumer<? extends P1> consumer) {
-			return add(name, ExternalFunctionDecl.ofVoid(p1, consumer));
+			return add(name, HostOnlyFunctionDecl.ofVoid(p1, consumer));
 		}
 
 		public <P1, P2> ModuleBuilder addVoidFunc(String name, ValueType p1, ValueType p2, BiConsumer<? extends P1, ? extends P2> consumer) {
-			return add(name, ExternalFunctionDecl.ofVoid(p1, p2, consumer));
+			return add(name, HostOnlyFunctionDecl.ofVoid(p1, p2, consumer));
 		}
 
 		public <R> ModuleBuilder addFunc(String name, ValueType ret, Supplier<? extends R> supplier) {
-			return add(name, ExternalFunctionDecl.of(ret, supplier));
+			return add(name, HostOnlyFunctionDecl.of(ret, supplier));
 		}
 
 		public <R, P1> ModuleBuilder addFunc(String name, ValueType ret, ValueType p1, java.util.function.Function<? extends P1, ? extends R> supplier) {
-			return add(name, ExternalFunctionDecl.of(ret, p1, supplier));
+			return add(name, HostOnlyFunctionDecl.of(ret, p1, supplier));
 		}
 
 		public <R, P1, P2> ModuleBuilder addFunc(String name, ValueType ret, ValueType p1, ValueType p2, BiFunction<? extends P1, ? extends P2, ? extends R> supplier) {
-			return add(name, ExternalFunctionDecl.of(ret, p1, p2, supplier));
+			return add(name, HostOnlyFunctionDecl.of(ret, p1, p2, supplier));
 		}
 	}
 }

@@ -5,7 +5,6 @@ import java.util.List;
 import tinywasmr.engine.exec.executor.DefaultExecutor;
 import tinywasmr.engine.exec.value.Value;
 import tinywasmr.engine.exec.vm.DefaultMachine;
-import tinywasmr.engine.module.func.ExternalFunctionDecl;
 import tinywasmr.engine.module.func.FunctionDecl;
 import tinywasmr.engine.type.FunctionType;
 import tinywasmr.engine.type.value.ValueType;
@@ -45,11 +44,8 @@ public record Function(Instance instance, FunctionDecl declaration) implements E
 			.formatted(paramTypes.size(), params.length));
 
 		Value[] inputs = new Value[params.length];
-		Value[] outputs;
 		for (int i = 0; i < inputs.length; i++) inputs[i] = paramTypes.get(i).mapFromJava(params[i]);
-
-		if (declaration instanceof ExternalFunctionDecl extern) outputs = extern.onExec(instance, inputs);
-		else outputs = new DefaultExecutor().execute(this, inputs);
+		Value[] outputs = new DefaultExecutor().execute(this, inputs);
 
 		if (outputs.length != resultTypes.size()) throw new IllegalArgumentException("Expecting %d results, found %d"
 			.formatted(resultTypes.size(), outputs.length));

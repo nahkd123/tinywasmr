@@ -5,9 +5,11 @@ import java.util.List;
 import tinywasmr.engine.exec.StepResult;
 import tinywasmr.engine.exec.ValidationException;
 import tinywasmr.engine.exec.frame.Frame;
+import tinywasmr.engine.exec.frame.FunctionFrame;
 import tinywasmr.engine.exec.trap.ExternalTrap;
 import tinywasmr.engine.exec.value.Value;
 import tinywasmr.engine.exec.vm.Machine;
+import tinywasmr.engine.module.func.extern.ExternalFunctionDecl;
 import tinywasmr.engine.type.value.ValueType;
 
 /**
@@ -16,6 +18,12 @@ import tinywasmr.engine.type.value.ValueType;
  * </p>
  */
 public class DefaultExecutor implements Executor {
+	private boolean shouldPopFrame(Machine vm) {
+		if (vm.peekFrame() instanceof FunctionFrame func && func.getDeclaration() instanceof ExternalFunctionDecl)
+			return false;
+		return vm.peekFrame().getInsnIndex() >= vm.peekFrame().getExecutingInsns().size();
+	}
+
 	@Override
 	public StepResult step(Machine vm) {
 		if (vm.getTrap() != null) return StepResult.TRAP;
@@ -24,7 +32,7 @@ public class DefaultExecutor implements Executor {
 			return StepResult.TRAP;
 		}
 
-		while (vm.peekFrame().getInsnIndex() >= vm.peekFrame().getExecutingInsns().size()) {
+		while (shouldPopFrame(vm)) {
 			List<ValueType> resultTypes = vm.peekFrame().getBranchResultTypes().blockResults();
 			Value[] results = new Value[resultTypes.size()];
 
@@ -48,7 +56,13 @@ public class DefaultExecutor implements Executor {
 		Frame frame = vm.peekFrame();
 
 		try {
-			frame.getExecutingInsns().get(frame.getInsnIndex()).execute(vm);
+			if (frame instanceof FunctionFrame functionFrame
+				&& functionFrame.getDeclaration() instanceof ExternalFunctionDecl extern) {
+				extern.onStep(vm, functionFrame, functionFrame.getLocals(), functionFrame.getInsnIndex());
+			} else {
+				frame.getExecutingInsns().get(frame.getInsnIndex()).execute(vm);
+			}
+
 			return StepResult.NORMAL;
 		} catch (Throwable e) {
 			vm.setTrap(new ExternalTrap(e));

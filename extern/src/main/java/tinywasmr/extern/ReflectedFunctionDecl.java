@@ -5,11 +5,11 @@ import java.lang.reflect.Method;
 
 import tinywasmr.engine.exec.instance.Instance;
 import tinywasmr.engine.exec.value.Value;
-import tinywasmr.engine.module.func.ExternalFunctionDecl;
+import tinywasmr.engine.module.func.extern.HostOnlyFunctionDecl;
 import tinywasmr.engine.type.FunctionType;
 import tinywasmr.engine.type.value.ValueType;
 
-public class ReflectedFunctionDecl implements ExternalFunctionDecl {
+public class ReflectedFunctionDecl implements HostOnlyFunctionDecl {
 	private Method method;
 	private FunctionType type;
 	private ValueType returnType;

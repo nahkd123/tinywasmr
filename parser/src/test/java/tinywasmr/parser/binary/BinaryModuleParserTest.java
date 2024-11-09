@@ -16,7 +16,7 @@ import tinywasmr.engine.exec.instance.Function;
 import tinywasmr.engine.exec.instance.Instance;
 import tinywasmr.engine.exec.instance.SimpleImporter;
 import tinywasmr.engine.exec.memory.Memory;
-import tinywasmr.engine.module.func.ExternalFunctionDecl;
+import tinywasmr.engine.module.func.extern.HostOnlyFunctionDecl;
 import tinywasmr.engine.type.value.NumberType;
 import tinywasmr.parser.ParsedWasmModule;
 
@@ -57,7 +57,7 @@ class BinaryModuleParserTest {
 	@Test
 	void testCallIndirect() {
 		AtomicInteger hits = new AtomicInteger();
-		Function hitter = new Function(null, ExternalFunctionDecl.ofVoid(hits::incrementAndGet));
+		Function hitter = new Function(null, HostOnlyFunctionDecl.ofVoid(hits::incrementAndGet));
 		ParsedWasmModule module = load("binary/003_callindirect.wasm");
 		Instance instance = new DefaultInstance(module, null);
 		instance.export("main").asFunction().exec(hitter);

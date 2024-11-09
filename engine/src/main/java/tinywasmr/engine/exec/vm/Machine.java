@@ -5,8 +5,10 @@ import java.util.List;
 import tinywasmr.engine.exec.frame.ExternalFrame;
 import tinywasmr.engine.exec.frame.Frame;
 import tinywasmr.engine.exec.frame.FunctionFrame;
+import tinywasmr.engine.exec.instance.Function;
 import tinywasmr.engine.exec.trap.ModuleTrap;
 import tinywasmr.engine.exec.trap.Trap;
+import tinywasmr.engine.exec.value.Value;
 
 /**
  * <p>
@@ -37,6 +39,29 @@ public interface Machine {
 	FunctionFrame peekFunctionFrame();
 
 	void pushFrame(Frame frame);
+
+	default FunctionFrame call(Function function, Value[] parameters) {
+		FunctionFrame frame = FunctionFrame.createCall(function, parameters);
+		pushFrame(frame);
+		return frame;
+	}
+
+	/**
+	 * <p>
+	 * Exit currently executing function and optionally push results to next current
+	 * operand stack.
+	 * </p>
+	 * 
+	 * @param results The results to push. Use {@code null} to push none.
+	 * @return The function frame that has been popped from stack.
+	 */
+	default FunctionFrame exitFunction(Value[] results) {
+		if (peekFrame() == getExternalFrame())
+			throw new IllegalStateException("Cannot exit: no function is being executed");
+		while (!(popFrame() instanceof FunctionFrame funcFrame));
+		if (results != null) for (Value val : results) peekFrame().pushOperand(val);
+		return funcFrame;
+	}
 
 	Frame popFrame();
 

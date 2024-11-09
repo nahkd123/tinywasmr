@@ -9,7 +9,7 @@ import tinywasmr.engine.exec.value.ExternRefValue;
 import tinywasmr.engine.exec.value.FuncRefValue;
 import tinywasmr.engine.exec.value.RefValue;
 import tinywasmr.engine.exec.value.Value;
-import tinywasmr.engine.module.func.ExternalFunctionDecl;
+import tinywasmr.engine.module.func.extern.HostOnlyFunctionDecl;
 
 public enum RefType implements ValueType {
 	FUNC(RefValue.NULL_FUNC),
@@ -42,7 +42,7 @@ public enum RefType implements ValueType {
 			if (object == null) return RefValue.NULL_FUNC;
 			if (object instanceof Function function) return new FuncRefValue(function);
 			if (object instanceof Runnable runnable)
-				return new FuncRefValue(new Function(null, ExternalFunctionDecl.ofVoid(runnable)));
+				return new FuncRefValue(new Function(null, HostOnlyFunctionDecl.ofVoid(runnable)));
 			// Not possible to derive parameters and result types from Consumer, BiConsumer,
 			// Function and BiFunction.
 		}
