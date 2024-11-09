@@ -113,4 +113,15 @@ public class SectionParser {
 
 		return functions;
 	}
+
+	public static BinaryDataSegment[] parseDataSection(int size, InputStream stream) throws IOException {
+		int count = StreamReader.readUint32Var(stream);
+		BinaryDataSegment[] data = new BinaryDataSegment[count];
+		for (int i = 0; i < count; i++) data[i] = BinaryDataSegment.parse(stream);
+		return data;
+	}
+
+	public static int parseDataCountSection(int size, InputStream stream) throws IOException {
+		return StreamReader.readUint32Var(stream);
+	}
 }

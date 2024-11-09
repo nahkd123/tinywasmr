@@ -8,6 +8,7 @@ import tinywasmr.engine.exec.table.Table;
 import tinywasmr.engine.module.CustomSection;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.func.FunctionDecl;
+import tinywasmr.engine.module.memory.DataSegment;
 import tinywasmr.engine.module.memory.MemoryDecl;
 import tinywasmr.engine.module.table.TableDecl;
 
@@ -34,6 +35,10 @@ public interface Instance {
 	 */
 	default List<CustomSection> custom() {
 		return module().custom();
+	}
+
+	default List<DataSegment> dataSegments() {
+		return module().dataSegments();
 	}
 
 	List<Function> functions();

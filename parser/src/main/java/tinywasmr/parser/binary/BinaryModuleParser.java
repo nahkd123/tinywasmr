@@ -26,9 +26,13 @@ import tinywasmr.engine.module.imprt.FunctionImportDescription;
 import tinywasmr.engine.module.imprt.ImportDecl;
 import tinywasmr.engine.module.imprt.MemoryImportDescription;
 import tinywasmr.engine.module.imprt.TableImportDescription;
+import tinywasmr.engine.module.memory.ActiveDataMode;
+import tinywasmr.engine.module.memory.DataMode;
+import tinywasmr.engine.module.memory.DataSegment;
 import tinywasmr.engine.module.memory.ImportMemoryDecl;
 import tinywasmr.engine.module.memory.MemoryDecl;
 import tinywasmr.engine.module.memory.ModuleMemoryDecl;
+import tinywasmr.engine.module.memory.PassiveDataMode;
 import tinywasmr.engine.module.table.ImportTableDecl;
 import tinywasmr.engine.module.table.ModuleTableDecl;
 import tinywasmr.engine.module.table.TableDecl;
@@ -64,6 +68,7 @@ public class BinaryModuleParser {
 	private BinaryImport[] imports;
 	private BinaryExport[] exports;
 	private BinaryFunctionBody[] code;
+	private BinaryDataSegment[] data;
 	private Map<Integer, List<byte[]>> unknowns;
 
 	/**
@@ -118,6 +123,7 @@ public class BinaryModuleParser {
 		imports = new BinaryImport[0];
 		exports = new BinaryExport[0];
 		code = new BinaryFunctionBody[0];
+		data = new BinaryDataSegment[0];
 		unknowns = new HashMap<>();
 	}
 
@@ -169,8 +175,8 @@ public class BinaryModuleParser {
 		case 0x08: throw new RuntimeException("0x08 start section not implemented");
 		case 0x09: throw new RuntimeException("0x09 element section not implemented");
 		case 0x0A: code = SectionParser.parseCodeSection(header.size(), stream); break;
-		case 0x0B: throw new RuntimeException("0x0B data section not implemented");
-		case 0x0C: throw new RuntimeException("0x0C data count section not implemented");
+		case 0x0B: data = SectionParser.parseDataSection(header.size(), stream); break;
+		case 0x0C: SectionParser.parseDataCountSection(header.size(), stream); break;
 		// @formatter:on
 		default:
 			if (header.size() == 0) throw new IOException("Section 0x%02x not implemented, can't skip (guessing size)"
@@ -186,7 +192,8 @@ public class BinaryModuleParser {
 		List<FunctionDecl> functions = new ArrayList<>();
 		List<TableDecl> tables = new ArrayList<>();
 		List<MemoryDecl> memories = new ArrayList<>();
-		BinaryModuleLayout indicesView = new BinaryModuleLayout(types, tables, memories, functions);
+		List<DataSegment> data = new ArrayList<>();
+		BinaryModuleLayout indicesView = new BinaryModuleLayout(types, tables, memories, functions, data);
 
 		// Resolving imports
 		List<ImportDecl> imports = Stream.of(this.imports)
@@ -216,6 +223,18 @@ public class BinaryModuleParser {
 			.toList();
 		memories.addAll(moduleMemories);
 
+		// Resolving data segments
+		for (BinaryDataSegment binaryData : this.data) {
+			DataMode mode = switch (binaryData.mode()) {
+			case BinaryDataSegment.MODE_ACTIVE_0, BinaryDataSegment.MODE_ACTIVE_EXPLICT ->
+				new ActiveDataMode(memories.get(binaryData.memidx()), new ArrayList<>());
+			case BinaryDataSegment.MODE_PASSIVE -> PassiveDataMode.PASSIVE;
+			default -> throw new IOException("Data mode not implemented: 0x%02x".formatted(binaryData.mode()));
+			};
+			DataSegment segment = new DataSegment(mode, binaryData.data());
+			data.add(segment);
+		}
+
 		// Resolving declared functions
 		List<ModuleFunctionDecl> moduleFunctions = IntStream.of(this.functions)
 			.mapToObj(types::get)
@@ -233,6 +252,14 @@ public class BinaryModuleParser {
 			}))
 			.toList();
 
+		// Resolving data segment expressions (unwrapping instructions)
+		for (int i = 0; i < data.size(); i++) {
+			BinaryDataSegment binaryData = this.data[i];
+			DataSegment segment = data.get(i);
+			if (segment.mode() instanceof ActiveDataMode activeMode)
+				binaryData.expression().forEach(b -> activeMode.offsetExpr().add(b.build(indicesView)));
+		}
+
 		// Resolving function bodies (unwrapping instructions)
 		if (code.length != moduleFunctions.size()) throw new IOException("Number of functions in code section does not"
 			+ "match with number of functions in function section (%d != %d)".formatted(
@@ -246,6 +273,8 @@ public class BinaryModuleParser {
 		}
 
 		// Finalize
+		module.custom().addAll(custom);
+		module.dataSegments().addAll(data);
 		module.declaredImports().addAll(imports);
 		module.declaredTables().addAll(tables);
 		module.declaredMemories().addAll(memories);

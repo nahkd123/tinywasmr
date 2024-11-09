@@ -1,10 +1,12 @@
 package tinywasmr.parser.binary;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
@@ -94,5 +96,15 @@ class BinaryModuleParserTest {
 			.build());
 		instance.export("main").asFunction().exec();
 		assertEquals(10, hits.get());
+	}
+
+	@Test
+	void testData() {
+		ParsedWasmModule module = load("binary/007_data.wasm");
+		Instance instance = new DefaultInstance(module, null);
+		instance.export("main").asFunction().exec();
+		assertArrayEquals(
+			"world".getBytes(StandardCharsets.US_ASCII),
+			instance.export("memory").asMemory().read(10, 5));
 	}
 }
