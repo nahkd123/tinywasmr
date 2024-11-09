@@ -11,10 +11,15 @@ import imgui.ImGuiIO;
 import imgui.app.Application;
 import imgui.app.Configuration;
 import imgui.flag.ImGuiConfigFlags;
+import tinywasmr.dbg.gui.MachineController;
+import tinywasmr.dbg.gui.MachineInspector;
+import tinywasmr.engine.exec.StepResult;
 import tinywasmr.engine.exec.executor.DefaultExecutor;
 import tinywasmr.engine.exec.executor.Executor;
 import tinywasmr.engine.exec.instance.DefaultInstance;
 import tinywasmr.engine.exec.instance.SimpleImporter;
+import tinywasmr.engine.exec.trap.ExternalTrap;
+import tinywasmr.engine.exec.trap.ModuleTrap;
 import tinywasmr.engine.exec.value.Value;
 import tinywasmr.engine.exec.vm.DefaultMachine;
 import tinywasmr.engine.exec.vm.Machine;
@@ -33,6 +38,11 @@ public class Main extends Application {
 	private DefaultInstance cartridge;
 	private Machine machine;
 	private Executor executor;
+
+	// Stages and execution
+	private boolean running;
+	private boolean startStage; // Whether start stage is finished
+	// After start stage, we enter update() immediately
 
 	// Misc
 	private FilePicker filePicker;
@@ -76,25 +86,6 @@ public class Main extends Application {
 				ImGui.endMenu();
 			}
 
-			if (ImGui.beginMenu("WASM-4")) {
-				ImGui.menuItem("Quick save", "Ctrl S");
-				ImGui.menuItem("Quick load", "Ctrl O");
-				ImGui.separator();
-				ImGui.menuItem("Configure...");
-				ImGui.endMenu();
-			}
-
-			if (ImGui.beginMenu("Debug")) {
-				ImGui.menuItem("Pause/resume execution", "Break");
-				ImGui.menuItem("Step into block", "F4", false, false);
-				ImGui.menuItem("Step next instruction", "F5", false, false);
-				ImGui.menuItem("Step out of block", "F6", false, false);
-				ImGui.separator();
-				ImGui.menuItem("Machine inspector");
-				ImGui.menuItem("Instance inspector");
-				ImGui.endMenu();
-			}
-
 			if (ImGui.beginMenu("Help")) {
 				if (ImGui.beginMenu("Documentations")) {
 					ImGui.menuItem("WASM-4 docs");
@@ -111,9 +102,24 @@ public class Main extends Application {
 			ImGui.endMainMenuBar();
 		}
 
-		// TODO
+		if (ImGui.begin("Machine Inspector")) {
+			MachineInspector.machine(machine);
+			ImGui.end();
+		}
+
+		if (ImGui.begin("Machine Controller")) {
+			MachineController.controller(
+				running,
+				() -> running = true,
+				() -> running = false,
+				this::stepIn, this::stepNext, this::stepOut);
+			ImGui.end();
+		}
+
+		ImGui.showDemoWindow();
 
 		if (font != null) ImGui.popFont();
+		onFrame();
 	}
 
 	public void loadCartridge(File cartfile) {
@@ -129,6 +135,67 @@ public class Main extends Application {
 
 		machine = new DefaultMachine();
 		executor = new DefaultExecutor();
+		running = true;
+		startStage = false;
 		machine.call(cartridge.initFunction(), new Value[0]);
+	}
+
+	public void onFrame() {
+		if (!running) return;
+		if (executor == null || machine == null) return;
+		if (machine.getTrap() != null) return;
+		if (machine.peekFrame() == machine.getExternalFrame()) nextStage();
+
+		while (true) {
+			StepResult result = executor.step(machine);
+			if (result == StepResult.TRAP) return;
+
+			if (machine.peekFrame() == machine.getExternalFrame()) {
+				nextStage();
+				return;
+			}
+		}
+	}
+
+	public void nextStage() {
+		if (!startStage) {
+			startStage = true;
+			machine.call(cartridge.export("start").asFunction(), new Value[0]);
+		} else {
+			machine.call(cartridge.export("update").asFunction(), new Value[0]);
+		}
+	}
+
+	public void stepIn() {
+		if (executor == null || machine == null) return;
+		if (machine.getTrap() != null) return;
+		if (machine.peekFrame() == machine.getExternalFrame()) nextStage();
+		else if (executor.step(machine) == StepResult.TRAP) {
+			if (machine.getTrap() instanceof ModuleTrap) System.err.println("module trap");
+			else if (machine.getTrap() instanceof ExternalTrap extern) {
+				extern.throwable().printStackTrace();
+				System.err.println("extern trap");
+			}
+		}
+	}
+
+	public void stepNext() {
+		if (executor == null || machine == null) return;
+		if (machine.getTrap() != null) return;
+		if (machine.peekFrame() == machine.getExternalFrame()) nextStage();
+		else {
+			int height = machine.getFrameStack().size();
+			do executor.step(machine); while (machine.getFrameStack().size() > height && machine.getTrap() == null);
+		}
+	}
+
+	public void stepOut() {
+		if (executor == null || machine == null) return;
+		if (machine.getTrap() != null) return;
+		if (machine.peekFrame() == machine.getExternalFrame()) nextStage();
+		else {
+			int height = machine.getFrameStack().size();
+			do executor.step(machine); while (machine.getFrameStack().size() >= height && machine.getTrap() == null);
+		}
 	}
 }

@@ -49,7 +49,7 @@ public class W4Environment {
 			disk.read(memory, address, size);
 		} else {
 			trace.accept("env::diskr() failed: no disk access provided");
-			Arrays.fill(memory, address, size, (byte) 0);
+			Arrays.fill(memory, address, address + size, (byte) 0);
 		}
 
 		return 0;

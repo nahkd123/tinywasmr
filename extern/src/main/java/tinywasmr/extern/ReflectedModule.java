@@ -10,6 +10,7 @@ import tinywasmr.engine.module.CustomSection;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.export.ExportDecl;
 import tinywasmr.engine.module.export.FunctionExportDescription;
+import tinywasmr.engine.module.export.MemoryExportDescription;
 import tinywasmr.engine.module.func.FunctionDecl;
 import tinywasmr.engine.module.global.GlobalDecl;
 import tinywasmr.engine.module.imprt.ImportDecl;
@@ -47,6 +48,7 @@ public class ReflectedModule<T> implements WasmModule {
 			};
 
 			memories.add(decl);
+			exports.add(new ExportDecl(name, new MemoryExportDescription(decl)));
 		}
 
 		for (Method method : clazz.getDeclaredMethods()) {
