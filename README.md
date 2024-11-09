@@ -13,7 +13,7 @@ It's not ready for production use yet; please come back later.
 	+ WASM-4 fantasy console runner (n/a)
 
 ## Project status
-TinyWasmR can now parse and run [Watris](https://wasm4.org/play/watris/)! While it doesn't output things correctly (because `w4` is still in progress), the `engine` and `parser` components can now read and understand a single WASM-4 game, which is a huge milestone personally.
+TinyWasmR can now parse and run [Watris](https://wasm4.org/play/watris/)! While it doesn't output things correctly (because `w4` is still in progress), the `engine` and `parser` components can now read and understand a single [WASM-4][w4] game, which is a huge milestone personally.
 
 TinyWasmR still lacking other stuffs:
 
@@ -142,12 +142,14 @@ One reason for getting inside virtual machine is to save the states into a file 
 - `jit`: TinyWasmR Just-in-time compiler - compiles module function into Java bytecode for performance. Note that you can't step each individual instruction once the function is JIT'd. I imagine the main use case for this is running WebAssembly modules on environment where native libraries can't be loaded by JVM.
 - `state`: WebAssembly virtual machine states serializer and deserializer. You might want to use this to save the states during debugging session.
 
-## License
-MIT License
+## License and acknowledgements
+- TinyWasmR (this repo) is licensed under [MIT License](./LICENSE)
+- Part of [WASM-4][w4] by aduros (licensed under ISC License) has been ported to this project (in `w4` component)
 
 TODO add MIT license header to all source files
 
 [docs]: ./docs/index.md
 [wabt]: https://github.com/WebAssembly/wabt
+[w4]: https://github.com/aduros/wasm4
 [alt-chicory]: https://github.com/dylibso/chicory
 [alt-wasmer]: https://github.com/wasmerio/wasmer-java
