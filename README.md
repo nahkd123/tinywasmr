@@ -7,9 +7,20 @@ It's not ready for production use yet; please come back later.
 ## Links
 - [Documentations][docs]
 	+ [Engine](./docs/engine/index.md)
-	+ Parser
-	+ Externals helper
-	+ WASM-4 fantasy console runner
+	+ Parser (n/a)
+	+ Externals helper (n/a)
+	+ Debugger (n/a)
+	+ WASM-4 fantasy console runner (n/a)
+
+## Project status
+TinyWasmR can now parse and run [Watris](https://wasm4.org/play/watris/)! While it doesn't output things correctly (because `w4` is still in progress), the `engine` and `parser` components can now read and understand a single WASM-4 game, which is a huge milestone personally.
+
+TinyWasmR still lacking other stuffs:
+
+- [ ] Table element initialization
+- [ ] Start function
+- [ ] Fully implement WASM-4 (missing font atm)
+- [ ] Pass all tests
 
 ## Usage
 ### Simplest usage
@@ -115,46 +126,6 @@ I personally think Chicory is a nice library for running your WebAssembly module
 
 One reason for getting inside virtual machine is to save the states into a file (a.k.a making snapshot of the VM), allowing you to resume the execution from those saved states.
 
-## A bit more info about TinyWasmR engine
-### Frame stack and operand stack
-In virtual machine, there are 2 types of stack: frame and operand. On each frame, there are operands organized into a stack, which can be pushed to and popped from it.
-
-Every time you enter a block or a function, it will push a new frame into the frame stack. This also means you will starts with a fresh operand stack with no operands. When you exit a block or function, the following things will happens:
-
-1. Pop N operands from current operand stack, store them as block/function results.
-2. Pop M frames from frame stack, branching out to parent block. The number of frames to pop is `nestIndex + 1`.
-3. Push the previously collected results to the parent frame's operand stack.
-
-(N is the number of value types declared in block/function results; M is `nestIndex + 1`)
-
-An example execution:
-
-```
-   Code                  | Machine's frame stack     | Changes
-0  i32.const 1           | E[] F[1]                  | F += [1]
-1  block => void         | E[] F[1] B[]              | machine += [B[]]
-   0  i32.const 2        | E[] F[1] B[2]             | B += [2]
-   1  br 0               | E[] F[1]                  | machine -= [B[2]]
-   2  i32.const 3        | <unreachable>             | <unreachable>
-2  i32.const 4           | E[] F[1, 4]               | F += [4]
-3  br 0                  | E[]                       | machine -= [F[1, 4]]
-
-   Legends
-E[] - External frame (collector)
-F[] - Function frame
-B[] - Block frame
-stack += [...] - Push to stack
-stack -= [...] - Pop from stack
-```
-
-### Trap and un-trap
-Normally, an embedder (term known as WebAssembly VM implementation) should stop the execution once a trap is generated. However, TinyWasmR allows you to ignore the trap and continue the execution, primarily for debugging purpose. This is not part of the specification (it is, in fact, not following the specification at all).
-
-### Runtime validation
-By default, TinyWasmR make no attempts to validate the execution of the program, which means you have to explicitly enable it. To enable validation, use `Machine#setRuntimeValidation(true)`.
-
-With runtime validation, the VM will validates the value types to ensure they are what we expected. For example, if the function that we are going to call only accepts `i32`, but our operand stack is `[...i32, v128, f64]`, it will trap the virtual machine.
-
 ## Alternatives
 - Google's v8 engine
 - [Chicory][alt-chicory] Purely in Java!
@@ -165,6 +136,7 @@ With runtime validation, the VM will validates the value types to ensure they ar
 - `engine`: The engine part (a.k.a the virtual machine). Contains virtual machine.
 - `parser`: WebAssembly binary and text parser. Parses your module to `WasmModule`.
 - `extern`: External helper component. Make your life easier with reflection tricks. May not work well with AoT (Ahead-of-time) compilers (which is why it is separated from `engine`).
+- `w4`: WASM-4 implementation in Java. Currently in progress.
 
 ## Future
 - `jit`: TinyWasmR Just-in-time compiler - compiles module function into Java bytecode for performance. Note that you can't step each individual instruction once the function is JIT'd. I imagine the main use case for this is running WebAssembly modules on environment where native libraries can't be loaded by JVM.
