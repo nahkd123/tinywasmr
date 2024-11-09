@@ -4,12 +4,10 @@ import java.util.List;
 
 import tinywasmr.engine.exec.StepResult;
 import tinywasmr.engine.exec.ValidationException;
-import tinywasmr.engine.exec.frame.BlockFrame;
 import tinywasmr.engine.exec.frame.Frame;
 import tinywasmr.engine.exec.trap.ExternalTrap;
 import tinywasmr.engine.exec.value.Value;
 import tinywasmr.engine.exec.vm.Machine;
-import tinywasmr.engine.insn.control.LoopInsn;
 import tinywasmr.engine.type.value.ValueType;
 
 /**
@@ -27,12 +25,6 @@ public class DefaultExecutor implements Executor {
 		}
 
 		while (vm.peekFrame().getInsnIndex() >= vm.peekFrame().getExecutingInsns().size()) {
-			if (vm.peekFrame() instanceof BlockFrame blockFrame && blockFrame.getBlock() instanceof LoopInsn loop) {
-				vm.popFrame();
-				loop.execute(vm);
-				return StepResult.NORMAL;
-			}
-
 			List<ValueType> resultTypes = vm.peekFrame().getBranchResultTypes().blockResults();
 			Value[] results = new Value[resultTypes.size()];
 

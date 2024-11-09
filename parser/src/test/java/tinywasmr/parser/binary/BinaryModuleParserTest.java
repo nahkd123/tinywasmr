@@ -81,4 +81,18 @@ class BinaryModuleParserTest {
 		instance.export("main").asFunction().exec();
 		assertEquals(727 + 42, memory.readI32(0));
 	}
+
+	@Test
+	void testLoop() {
+		AtomicInteger hits = new AtomicInteger(0);
+		ParsedWasmModule module = load("binary/006_loop.wasm");
+		Instance instance = new DefaultInstance(module, SimpleImporter.builder()
+			.module("console", mod -> mod.<Integer>addVoidFunc("log", NumberType.I32, val -> {
+				assertEquals(hits.get(), val);
+				hits.incrementAndGet();
+			}))
+			.build());
+		instance.export("main").asFunction().exec();
+		assertEquals(10, hits.get());
+	}
 }

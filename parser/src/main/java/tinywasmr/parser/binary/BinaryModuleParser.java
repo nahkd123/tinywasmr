@@ -241,6 +241,7 @@ public class BinaryModuleParser {
 
 		for (int i = 0; i < code.length; i++) {
 			ModuleFunctionDecl decl = moduleFunctions.get(i);
+			decl.extraLocals().addAll(code[i].locals());
 			code[i].body().forEach(b -> decl.body().add(b.build(indicesView)));
 		}
 

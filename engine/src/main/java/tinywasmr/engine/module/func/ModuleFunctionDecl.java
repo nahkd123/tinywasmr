@@ -47,4 +47,9 @@ public class ModuleFunctionDecl implements FunctionDecl {
 	public List<ValueType> allLocals() {
 		return Stream.concat(type.inputs().types().stream(), extraLocals.stream()).toList();
 	}
+
+	@Override
+	public String toString() {
+		return "%s (local %s)".formatted(type, extraLocals);
+	}
 }
