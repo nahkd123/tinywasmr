@@ -7,6 +7,8 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import tinywasmr.engine.exec.global.Global;
+import tinywasmr.engine.exec.memory.ByteArrayMemoryView;
 import tinywasmr.engine.exec.memory.Memory;
 import tinywasmr.engine.exec.table.Table;
 import tinywasmr.engine.module.func.extern.ExternalFunctionDecl;
@@ -60,7 +62,14 @@ public record SimpleImporter(Map<String, Object> objects) implements Importer {
 	public Memory importMemory(String module, String name) {
 		Object obj = objects.get(key(module, name));
 		if (obj instanceof Memory memory) return memory;
-		// TODO MemoryView - A view to byte[]
+		if (obj instanceof byte[] bs) return new ByteArrayMemoryView(bs);
+		return null;
+	}
+
+	@Override
+	public Global importGlobal(String module, String name) {
+		Object obj = objects.get(key(module, name));
+		if (obj instanceof Global global) return global;
 		return null;
 	}
 

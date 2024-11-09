@@ -1,5 +1,6 @@
 package tinywasmr.engine.exec.instance;
 
+import tinywasmr.engine.exec.global.Global;
 import tinywasmr.engine.exec.memory.Memory;
 import tinywasmr.engine.exec.table.Table;
 
@@ -9,4 +10,6 @@ public interface Importer {
 	Table importTable(String module, String name);
 
 	Memory importMemory(String module, String name);
+
+	Global importGlobal(String module, String name);
 }

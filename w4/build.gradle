@@ -1,0 +1,15 @@
+dependencies {
+    testImplementation libs.junit.jupiter
+
+    // Components
+    implementation project(':engine')
+    implementation project(':parser')
+    implementation project(':extern')
+
+    // Libraries
+    implementation libs.imgui.java
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

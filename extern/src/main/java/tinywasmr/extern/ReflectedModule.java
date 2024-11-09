@@ -1,5 +1,6 @@
 package tinywasmr.extern;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,6 +11,7 @@ import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.export.ExportDecl;
 import tinywasmr.engine.module.export.FunctionExportDescription;
 import tinywasmr.engine.module.func.FunctionDecl;
+import tinywasmr.engine.module.global.GlobalDecl;
 import tinywasmr.engine.module.imprt.ImportDecl;
 import tinywasmr.engine.module.memory.DataSegment;
 import tinywasmr.engine.module.memory.MemoryDecl;
@@ -17,13 +19,35 @@ import tinywasmr.engine.module.table.TableDecl;
 import tinywasmr.extern.annotation.Export;
 import tinywasmr.extern.annotation.ExportType;
 
-public class ReflectedWasmModule<T> implements WasmModule {
+public class ReflectedModule<T> implements WasmModule {
 	private Class<T> clazz;
 	private List<FunctionDecl> functions = new ArrayList<>();
+	private List<MemoryDecl> memories = new ArrayList<>();
 	private List<ExportDecl> exports = new ArrayList<>();
 
-	public ReflectedWasmModule(Class<T> clazz) {
+	public ReflectedModule(Class<T> clazz) {
 		this.clazz = clazz;
+
+		for (Field field : clazz.getDeclaredFields()) {
+			Export annotation = field.getDeclaredAnnotation(Export.class);
+			if (annotation == null) continue;
+			String name = annotation.exportAs();
+			if (name.isEmpty()) name = field.getName();
+			ExportType type = annotation.value();
+
+			if (type == ExportType.AUTO) {
+				if (field.getType() == byte[].class) type = ExportType.MEMORY;
+				else throw new RuntimeException("Unable to automatically detect export type for %s"
+					.formatted(field));
+			}
+
+			MemoryDecl decl = switch (type) {
+			case MEMORY -> new ReflectedMemoryDecl(field);
+			default -> throw new RuntimeException("Unreachable");
+			};
+
+			memories.add(decl);
+		}
 
 		for (Method method : clazz.getDeclaredMethods()) {
 			Export annotation = method.getDeclaredAnnotation(Export.class);
@@ -37,6 +61,7 @@ public class ReflectedWasmModule<T> implements WasmModule {
 				exports.add(new ExportDecl(name, new FunctionExportDescription(decl)));
 			} else if (annotation.value() == ExportType.GLOBAL) {
 				// TODO
+				throw new RuntimeException("Table export not implemented");
 			}
 		}
 	}
@@ -77,6 +102,11 @@ public class ReflectedWasmModule<T> implements WasmModule {
 
 	@Override
 	public List<MemoryDecl> declaredMemories() {
+		return memories;
+	}
+
+	@Override
+	public List<GlobalDecl> declaredGlobals() {
 		// TODO Auto-generated method stub
 		return Collections.emptyList();
 	}

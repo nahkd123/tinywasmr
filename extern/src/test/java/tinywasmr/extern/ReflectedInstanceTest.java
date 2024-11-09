@@ -20,7 +20,7 @@ class ReflectedInstanceTest {
 			}
 		}
 
-		ReflectedWasmModule<MyInstance> module = new ReflectedWasmModule<>(MyInstance.class);
+		ReflectedModule<MyInstance> module = new ReflectedModule<>(MyInstance.class);
 		ReflectedInstance<MyInstance> instance = module.instanceOf(new MyInstance());
 		instance.export("main").asFunction().exec();
 		assertEquals(1, hits.get());

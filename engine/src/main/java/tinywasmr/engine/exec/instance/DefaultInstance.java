@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import tinywasmr.engine.exec.global.DefaultGlobal;
+import tinywasmr.engine.exec.global.Global;
 import tinywasmr.engine.exec.memory.DefaultMemory;
 import tinywasmr.engine.exec.memory.Memory;
 import tinywasmr.engine.exec.table.DefaultTable;
@@ -13,10 +15,13 @@ import tinywasmr.engine.exec.table.Table;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.export.ExportDecl;
 import tinywasmr.engine.module.export.FunctionExportDescription;
+import tinywasmr.engine.module.export.GlobalExportDescription;
 import tinywasmr.engine.module.export.MemoryExportDescription;
 import tinywasmr.engine.module.export.TableExportDescription;
 import tinywasmr.engine.module.func.FunctionDecl;
 import tinywasmr.engine.module.func.ImportFunctionDecl;
+import tinywasmr.engine.module.global.GlobalDecl;
+import tinywasmr.engine.module.global.ImportGlobalDecl;
 import tinywasmr.engine.module.memory.ImportMemoryDecl;
 import tinywasmr.engine.module.memory.MemoryDecl;
 import tinywasmr.engine.module.memory.ModuleMemoryDecl;
@@ -24,15 +29,18 @@ import tinywasmr.engine.module.table.ImportTableDecl;
 import tinywasmr.engine.module.table.ModuleTableDecl;
 import tinywasmr.engine.module.table.TableDecl;
 import tinywasmr.engine.type.FunctionType;
+import tinywasmr.engine.type.GlobalType;
 
 public class DefaultInstance implements Instance {
 	private WasmModule module;
 	private List<Function> allFunctions;
 	private List<Table> allTables;
 	private List<Memory> allMemories;
+	private List<Global> allGlobals;
 	private Map<FunctionDecl, Function> declToFunction;
 	private Map<TableDecl, Table> declToTable;
 	private Map<MemoryDecl, Memory> declToMemory;
+	private Map<GlobalDecl, Global> declToGlobal;
 	private Map<String, Export> exports;
 	private Function initFunction;
 
@@ -41,9 +49,11 @@ public class DefaultInstance implements Instance {
 		this.allFunctions = new ArrayList<>();
 		this.allTables = new ArrayList<>();
 		this.allMemories = new ArrayList<>();
+		this.allGlobals = new ArrayList<>();
 		this.declToFunction = new HashMap<>();
 		this.declToTable = new HashMap<>();
 		this.declToMemory = new HashMap<>();
+		this.declToGlobal = new HashMap<>();
 		this.exports = new HashMap<>();
 		setup(importer);
 		this.initFunction = new Function(this, module.initFunction());
@@ -129,6 +139,28 @@ public class DefaultInstance implements Instance {
 			declToFunction.put(decl, function);
 		}
 
+		for (GlobalDecl decl : module.declaredGlobals()) {
+			Global global;
+
+			if (decl instanceof ImportGlobalDecl imp) {
+				String mod = imp.declaration().module();
+				String name = imp.declaration().name();
+				GlobalType type = imp.type();
+				global = importer.importGlobal(mod, name);
+				if (global == null) throw new IllegalArgumentException("Module requires global %s::%s"
+					.formatted(mod, name));
+				if (!type.equals(global.declaration().type()))
+					throw new IllegalArgumentException("Imported global %s::%s type mismatch: %s (decl) != %s"
+						.formatted(mod, name, type, global.declaration().type()));
+				if (global.declaration() != null) declToGlobal.put(imp, global);
+			} else {
+				global = new DefaultGlobal(decl, null);
+			}
+
+			allGlobals.add(global);
+			declToGlobal.put(decl, global);
+		}
+
 		for (ExportDecl export : module.declaredExports()) {
 			Exportable exportable;
 
@@ -138,6 +170,8 @@ public class DefaultInstance implements Instance {
 				exportable = declToTable.get(desc.table());
 			} else if (export.description() instanceof MemoryExportDescription desc) {
 				exportable = declToMemory.get(desc.memory());
+			} else if (export.description() instanceof GlobalExportDescription desc) {
+				exportable = declToGlobal.get(desc.global());
 			} else {
 				throw new IllegalArgumentException("Unable to resolve export declaration for %s"
 					.formatted(export.description().getClass().getName()));
@@ -185,6 +219,16 @@ public class DefaultInstance implements Instance {
 	@Override
 	public Memory memory(MemoryDecl decl) {
 		return declToMemory.get(decl);
+	}
+
+	@Override
+	public List<Global> globals() {
+		return allGlobals;
+	}
+
+	@Override
+	public Global global(GlobalDecl decl) {
+		return declToGlobal.get(decl);
 	}
 
 	@Override

@@ -1,5 +1,6 @@
 package tinywasmr.engine.exec.instance;
 
+import tinywasmr.engine.exec.global.Global;
 import tinywasmr.engine.exec.memory.Memory;
 import tinywasmr.engine.exec.table.Table;
 import tinywasmr.engine.module.export.ExportDecl;
@@ -27,5 +28,10 @@ public record Export(ExportDecl declaration, String name, Exportable value) {
 	public Memory asMemory() {
 		if (value() instanceof Memory memory) return memory;
 		throw new IllegalArgumentException("This export is not a memory");
+	}
+
+	public Global asGlobal() {
+		if (value() instanceof Global global) return global;
+		throw new IllegalArgumentException("This export is not a global");
 	}
 }

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import tinywasmr.engine.exec.global.Global;
 import tinywasmr.engine.exec.instance.Export;
 import tinywasmr.engine.exec.instance.Exportable;
 import tinywasmr.engine.exec.instance.Function;
@@ -15,17 +16,21 @@ import tinywasmr.engine.exec.memory.Memory;
 import tinywasmr.engine.exec.table.Table;
 import tinywasmr.engine.module.export.ExportDecl;
 import tinywasmr.engine.module.export.FunctionExportDescription;
+import tinywasmr.engine.module.export.MemoryExportDescription;
 import tinywasmr.engine.module.func.FunctionDecl;
+import tinywasmr.engine.module.memory.MemoryDecl;
 
 public class ReflectedInstance<T> implements Instance {
-	private ReflectedWasmModule<T> module;
+	private ReflectedModule<T> module;
 	private T object;
 
 	private List<Function> functions = new ArrayList<>();
+	private List<Memory> memories = new ArrayList<>();
 	private Map<FunctionDecl, Function> declToFunctions = new HashMap<>();
+	private Map<MemoryDecl, Memory> declToMemories = new HashMap<>();
 	private Map<String, Export> exports = new HashMap<>();
 
-	public ReflectedInstance(ReflectedWasmModule<T> module, T object) {
+	public ReflectedInstance(ReflectedModule<T> module, T object) {
 		this.module = module;
 		this.object = object;
 
@@ -35,9 +40,17 @@ public class ReflectedInstance<T> implements Instance {
 			declToFunctions.put(decl, function);
 		}
 
+		for (MemoryDecl decl : module.declaredMemories()) {
+			if (!(decl instanceof ReflectedMemoryDecl reflected)) throw new IllegalArgumentException("Not reflected");
+			Memory memory = reflected.getFrom(object);
+			memories.add(memory);
+			declToMemories.put(reflected, memory);
+		}
+
 		for (ExportDecl decl : module.declaredExports()) {
 			Exportable exp = null;
 			if (decl.description() instanceof FunctionExportDescription d) exp = function(d.function());
+			if (decl.description() instanceof MemoryExportDescription d) exp = memory(d.memory());
 			if (exp == null) throw new RuntimeException("Not implemented: %s".formatted(exp));
 			exports.put(decl.name(), new Export(decl, exp));
 		}
@@ -48,7 +61,7 @@ public class ReflectedInstance<T> implements Instance {
 	}
 
 	@Override
-	public ReflectedWasmModule<T> module() {
+	public ReflectedModule<T> module() {
 		return module;
 	}
 
@@ -69,9 +82,19 @@ public class ReflectedInstance<T> implements Instance {
 	}
 
 	@Override
-	public List<Memory> memories() {
+	public List<Global> globals() {
 		// TODO Auto-generated method stub
 		return Collections.emptyList();
+	}
+
+	@Override
+	public List<Memory> memories() {
+		return memories;
+	}
+
+	@Override
+	public Memory memory(MemoryDecl decl) {
+		return declToMemories.get(decl);
 	}
 
 	@Override

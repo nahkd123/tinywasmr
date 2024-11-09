@@ -9,6 +9,7 @@ It's not ready for production use yet; please come back later.
 	+ [Engine](./docs/engine/index.md)
 	+ Parser
 	+ Externals helper
+	+ WASM-4 fantasy console runner
 
 ## Usage
 ### Simplest usage

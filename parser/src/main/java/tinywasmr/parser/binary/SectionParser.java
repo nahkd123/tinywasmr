@@ -73,6 +73,13 @@ public class SectionParser {
 		return memories;
 	}
 
+	public static BinaryGlobal[] parseGlobalSection(int size, InputStream stream) throws IOException {
+		int count = StreamReader.readUint32Var(stream);
+		BinaryGlobal[] memories = new BinaryGlobal[count];
+		for (int i = 0; i < count; i++) memories[i] = BinaryGlobal.parse(stream);
+		return memories;
+	}
+
 	public static BinaryImport[] parseImportSection(int size, InputStream stream) throws IOException {
 		int count = StreamReader.readUint32Var(stream);
 		BinaryImport[] imports = new BinaryImport[count];

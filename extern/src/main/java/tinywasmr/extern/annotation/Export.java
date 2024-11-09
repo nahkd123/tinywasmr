@@ -7,6 +7,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import tinywasmr.engine.exec.memory.ByteArrayMemoryView;
 import tinywasmr.engine.exec.memory.Memory;
 import tinywasmr.engine.exec.table.Table;
 import tinywasmr.engine.type.Mutability;
@@ -18,6 +19,8 @@ import tinywasmr.engine.type.Mutability;
  * <li>Apply this annotation on method to export it as function</li>
  * <li>Apply this annotation on {@link Memory} field to export it as memory
  * (there can be only 1 memory for each instance)</li>
+ * <li>Apply this annotation on {@code byte[]} field to export it as
+ * {@link ByteArrayMemoryView}</li>
  * <li>Apply this annotation on {@link Table} field to export it as table</li>
  * <li>Apply this annotation on {@link tinywasmr.engine.exec.instance.Function}
  * field to export it as global variable with function reference type

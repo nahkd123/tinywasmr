@@ -16,6 +16,7 @@ import tinywasmr.engine.exec.instance.Function;
 import tinywasmr.engine.exec.instance.Instance;
 import tinywasmr.engine.exec.instance.SimpleImporter;
 import tinywasmr.engine.exec.memory.Memory;
+import tinywasmr.engine.exec.value.NumberI32Value;
 import tinywasmr.engine.module.func.extern.HostOnlyFunctionDecl;
 import tinywasmr.engine.type.value.NumberType;
 import tinywasmr.parser.ParsedWasmModule;
@@ -110,5 +111,16 @@ class BinaryModuleParserTest {
 		assertArrayEquals(
 			"hello".getBytes(StandardCharsets.US_ASCII),
 			instance.export("memory").asMemory().read(0, 5)); // copied from active segment
+	}
+
+	@Test
+	void testGlobal() {
+		ParsedWasmModule module = load("binary/008_global.wasm");
+		Instance instance = new DefaultInstance(module, null);
+		instance.initFunction().exec();
+		assertEquals(42, instance.export("answer").asGlobal().get().i32());
+		instance.export("answer").asGlobal().set(new NumberI32Value(420));
+		assertEquals(420, instance.export("main").asFunction().exec());
+		assertEquals(727, instance.export("answer").asGlobal().get().i32());
 	}
 }

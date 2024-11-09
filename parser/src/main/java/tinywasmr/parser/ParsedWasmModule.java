@@ -3,11 +3,12 @@ package tinywasmr.parser;
 import java.util.ArrayList;
 import java.util.List;
 
-import tinywasmr.engine.exec.instance.InitializerFunctionDecl;
 import tinywasmr.engine.module.CustomSection;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.export.ExportDecl;
 import tinywasmr.engine.module.func.FunctionDecl;
+import tinywasmr.engine.module.func.InitializerFunctionDecl;
+import tinywasmr.engine.module.global.GlobalDecl;
 import tinywasmr.engine.module.imprt.ImportDecl;
 import tinywasmr.engine.module.memory.DataSegment;
 import tinywasmr.engine.module.memory.MemoryDecl;
@@ -20,6 +21,7 @@ public class ParsedWasmModule implements WasmModule {
 	private List<ExportDecl> exports = new ArrayList<>();
 	private List<TableDecl> tables = new ArrayList<>();
 	private List<MemoryDecl> memories = new ArrayList<>();
+	private List<GlobalDecl> globals = new ArrayList<>();
 	private List<FunctionDecl> functions = new ArrayList<>();
 	private InitializerFunctionDecl initializer = null;
 
@@ -51,6 +53,11 @@ public class ParsedWasmModule implements WasmModule {
 	@Override
 	public List<MemoryDecl> declaredMemories() {
 		return memories;
+	}
+
+	@Override
+	public List<GlobalDecl> declaredGlobals() {
+		return globals;
 	}
 
 	@Override

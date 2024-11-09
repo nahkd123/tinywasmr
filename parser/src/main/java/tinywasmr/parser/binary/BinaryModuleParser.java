@@ -17,12 +17,17 @@ import tinywasmr.engine.module.CustomSection;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.export.ExportDecl;
 import tinywasmr.engine.module.export.FunctionExportDescription;
+import tinywasmr.engine.module.export.GlobalExportDescription;
 import tinywasmr.engine.module.export.MemoryExportDescription;
 import tinywasmr.engine.module.export.TableExportDescription;
 import tinywasmr.engine.module.func.FunctionDecl;
 import tinywasmr.engine.module.func.ImportFunctionDecl;
 import tinywasmr.engine.module.func.ModuleFunctionDecl;
+import tinywasmr.engine.module.global.GlobalDecl;
+import tinywasmr.engine.module.global.ImportGlobalDecl;
+import tinywasmr.engine.module.global.ModuleGlobalDecl;
 import tinywasmr.engine.module.imprt.FunctionImportDescription;
+import tinywasmr.engine.module.imprt.GlobalImportDescription;
 import tinywasmr.engine.module.imprt.ImportDecl;
 import tinywasmr.engine.module.imprt.MemoryImportDescription;
 import tinywasmr.engine.module.imprt.TableImportDescription;
@@ -67,6 +72,7 @@ public class BinaryModuleParser {
 	private MemoryType[] memories;
 	private BinaryImport[] imports;
 	private BinaryExport[] exports;
+	private BinaryGlobal[] globals;
 	private BinaryFunctionBody[] code;
 	private BinaryDataSegment[] data;
 	private Map<Integer, List<byte[]>> unknowns;
@@ -122,6 +128,7 @@ public class BinaryModuleParser {
 		memories = new MemoryType[0];
 		imports = new BinaryImport[0];
 		exports = new BinaryExport[0];
+		globals = new BinaryGlobal[0];
 		code = new BinaryFunctionBody[0];
 		data = new BinaryDataSegment[0];
 		unknowns = new HashMap<>();
@@ -170,7 +177,7 @@ public class BinaryModuleParser {
 		case 0x03: functions = SectionParser.parseFunctionSection(header.size(), stream); break;
 		case 0x04: tables = SectionParser.parseTableSection(header.size(), stream); break;
 		case 0x05: memories = SectionParser.parseMemorySection(header.size(), stream); break;
-		case 0x06: throw new RuntimeException("0x06 global section not implemented");
+		case 0x06: globals = SectionParser.parseGlobalSection(header.size(), stream); break;
 		case 0x07: exports = SectionParser.parseExportSection(header.size(), stream); break;
 		case 0x08: throw new RuntimeException("0x08 start section not implemented");
 		case 0x09: throw new RuntimeException("0x09 element section not implemented");
@@ -192,8 +199,9 @@ public class BinaryModuleParser {
 		List<FunctionDecl> functions = new ArrayList<>();
 		List<TableDecl> tables = new ArrayList<>();
 		List<MemoryDecl> memories = new ArrayList<>();
+		List<GlobalDecl> globals = new ArrayList<>();
 		List<DataSegment> data = new ArrayList<>();
-		BinaryModuleLayout indicesView = new BinaryModuleLayout(types, tables, memories, functions, data);
+		BinaryModuleLayout indicesView = new BinaryModuleLayout(types, tables, memories, functions, globals, data);
 
 		// Resolving imports
 		List<ImportDecl> imports = Stream.of(this.imports)
@@ -206,6 +214,8 @@ public class BinaryModuleParser {
 				tables.add(new ImportTableDecl(module, tableImport.type(), imp));
 			} else if (imp.description() instanceof MemoryImportDescription memoryImport) {
 				memories.add(new ImportMemoryDecl(module, memoryImport.type(), imp));
+			} else if (imp.description() instanceof GlobalImportDescription globalImport) {
+				globals.add(new ImportGlobalDecl(module, globalImport.type(), imp));
 			} else {
 				throw new RuntimeException("Not implemented: %s".formatted(imp.getClass()));
 			}
@@ -222,6 +232,12 @@ public class BinaryModuleParser {
 			.map(type -> new ModuleMemoryDecl(module, type))
 			.toList();
 		memories.addAll(moduleMemories);
+
+		// Resolving declared globals
+		List<ModuleGlobalDecl> moduleGlobals = Stream.of(this.globals)
+			.map(type -> new ModuleGlobalDecl(module, type.type(), new ArrayList<>()))
+			.toList();
+		globals.addAll(moduleGlobals);
 
 		// Resolving data segments
 		for (BinaryDataSegment binaryData : this.data) {
@@ -248,6 +264,7 @@ public class BinaryModuleParser {
 			case BinaryExport.TYPE_FUNC -> new FunctionExportDescription(functions.get(binary.index()));
 			case BinaryExport.TYPE_TABLE -> new TableExportDescription(tables.get(binary.index()));
 			case BinaryExport.TYPE_MEM -> new MemoryExportDescription(memories.get(binary.index()));
+			case BinaryExport.TYPE_GLOBAL -> new GlobalExportDescription(globals.get(binary.index()));
 			default -> throw new RuntimeException("Export type not implemented: 0x%02x".formatted(binary.type()));
 			}))
 			.toList();
@@ -258,6 +275,13 @@ public class BinaryModuleParser {
 			DataSegment segment = data.get(i);
 			if (segment.mode() instanceof ActiveDataMode activeMode)
 				binaryData.expression().forEach(b -> activeMode.offsetExpr().add(b.build(indicesView)));
+		}
+
+		// Resolving global expressions (unwrapping instructions)
+		for (int i = 0; i < moduleGlobals.size(); i++) {
+			BinaryGlobal binary = this.globals[i];
+			ModuleGlobalDecl decl = moduleGlobals.get(i);
+			binary.expression().forEach(b -> decl.init().add(b.build(indicesView)));
 		}
 
 		// Resolving function bodies (unwrapping instructions)
@@ -278,6 +302,7 @@ public class BinaryModuleParser {
 		module.declaredImports().addAll(imports);
 		module.declaredTables().addAll(tables);
 		module.declaredMemories().addAll(memories);
+		module.declaredGlobals().addAll(globals);
 		module.declaredFunctions().addAll(functions);
 		module.declaredExports().addAll(exports);
 		return module;

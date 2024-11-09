@@ -3,6 +3,7 @@ package tinywasmr.parser.binary;
 import java.util.List;
 
 import tinywasmr.engine.module.func.FunctionDecl;
+import tinywasmr.engine.module.global.GlobalDecl;
 import tinywasmr.engine.module.memory.DataSegment;
 import tinywasmr.engine.module.memory.MemoryDecl;
 import tinywasmr.engine.module.table.TableDecl;
@@ -14,5 +15,5 @@ import tinywasmr.engine.type.FunctionType;
  * types and declarations.
  * </p>
  */
-public record BinaryModuleLayout(List<FunctionType> types, List<TableDecl> tables, List<MemoryDecl> memories, List<FunctionDecl> functions, List<DataSegment> data) {
+public record BinaryModuleLayout(List<FunctionType> types, List<TableDecl> tables, List<MemoryDecl> memories, List<FunctionDecl> functions, List<GlobalDecl> globals, List<DataSegment> data) {
 }

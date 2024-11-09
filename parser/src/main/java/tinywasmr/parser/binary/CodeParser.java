@@ -32,6 +32,7 @@ import tinywasmr.engine.insn.memory.MemoryInsnType;
 import tinywasmr.engine.insn.memory.StoreInsn;
 import tinywasmr.engine.insn.memory.StoreType;
 import tinywasmr.engine.insn.numeric.NumericBinaryOpInsn;
+import tinywasmr.engine.insn.numeric.NumericConvertInsn;
 import tinywasmr.engine.insn.numeric.NumericUnaryOpInsn;
 import tinywasmr.engine.insn.parametric.ParametricInsn;
 import tinywasmr.engine.insn.parametric.SelectExplictInsn;
@@ -39,6 +40,8 @@ import tinywasmr.engine.insn.ref.RefFuncInsn;
 import tinywasmr.engine.insn.ref.RefInsn;
 import tinywasmr.engine.insn.table.TableInsn;
 import tinywasmr.engine.insn.table.TableInsnType;
+import tinywasmr.engine.insn.variable.GlobalInsn;
+import tinywasmr.engine.insn.variable.GlobalInsnType;
 import tinywasmr.engine.insn.variable.LocalInsn;
 import tinywasmr.engine.insn.variable.LocalInsnType;
 import tinywasmr.engine.type.BlockType;
@@ -224,6 +227,32 @@ public class CodeParser {
 	public static final int F64_MAX = 0xA5;
 	public static final int F64_COPYSIGN = 0xA6;
 
+	public static final int I32_WRAP_I64 = 0xA7;
+	public static final int I32_TRUNC_F32_S = 0xA8;
+	public static final int I32_TRUNC_F32_U = 0xA9;
+	public static final int I32_TRUNC_F64_S = 0xAA;
+	public static final int I32_TRUNC_F64_U = 0xAB;
+	public static final int I64_EXTEND_I32_S = 0xAC;
+	public static final int I64_EXTEND_I32_U = 0xAD;
+	public static final int I64_TRUNC_F32_S = 0xAE;
+	public static final int I64_TRUNC_F32_U = 0xAF;
+	public static final int I64_TRUNC_F64_S = 0xB0;
+	public static final int I64_TRUNC_F64_U = 0xB1;
+	public static final int F32_CONVERT_I32_S = 0xB2;
+	public static final int F32_CONVERT_I32_U = 0xB3;
+	public static final int F32_CONVERT_I64_S = 0xB4;
+	public static final int F32_CONVERT_I64_U = 0xB5;
+	public static final int F32_DEMOTE_F64 = 0xB6;
+	public static final int F64_CONVERT_I32_S = 0xB7;
+	public static final int F64_CONVERT_I32_U = 0xB8;
+	public static final int F64_CONVERT_I64_S = 0xB9;
+	public static final int F64_CONVERT_I64_U = 0xBA;
+	public static final int F64_PROMOTE_F32 = 0xBB;
+	public static final int I32_REINTERPRET_F32 = 0xBC;
+	public static final int F32_REINTERPRET_I32 = 0xBD;
+	public static final int I64_REINTERPRET_F64 = 0xBE;
+	public static final int F64_REINTERPRET_I64 = 0xBF;
+
 	// Reference instructions
 	public static final int REF_NULL = 0xD0;
 	public static final int REF_IS_NULL = 0xD1;
@@ -366,6 +395,17 @@ public class CodeParser {
 			int index = StreamReader.readUint32Var(stream);
 			return $ -> new LocalInsn(type, index);
 		}
+		case GLOBAL_GET:
+		case GLOBAL_SET: {
+			GlobalInsnType type = switch (insn) {
+			case GLOBAL_GET -> GlobalInsnType.GET;
+			case GLOBAL_SET -> GlobalInsnType.SET;
+			default -> throw new RuntimeException("Unreachable");
+			};
+
+			int index = StreamReader.readUint32Var(stream);
+			return view -> new GlobalInsn(type, view.globals().get(index));
+		}
 
 		// Table instructions
 		case TABLE_GET:
@@ -373,15 +413,17 @@ public class CodeParser {
 		case TABLE_GROW:
 		case TABLE_SIZE:
 		case TABLE_FILL: {
-			int idx = StreamReader.readUint32Var(stream);
-			return switch (insn) {
-			case TABLE_GET -> view -> new TableInsn(TableInsnType.GET, view.tables().get(idx));
-			case TABLE_SET -> view -> new TableInsn(TableInsnType.SET, view.tables().get(idx));
-			case TABLE_GROW -> view -> new TableInsn(TableInsnType.GROW, view.tables().get(idx));
-			case TABLE_SIZE -> view -> new TableInsn(TableInsnType.SIZE, view.tables().get(idx));
-			case TABLE_FILL -> view -> new TableInsn(TableInsnType.FILL, view.tables().get(idx));
+			TableInsnType type = switch (insn) {
+			case TABLE_GET ->  TableInsnType.GET;
+			case TABLE_SET ->  TableInsnType.SET;
+			case TABLE_GROW -> TableInsnType.GROW;
+			case TABLE_SIZE -> TableInsnType.SIZE;
+			case TABLE_FILL -> TableInsnType.FILL;
 			default -> throw new RuntimeException("Unreachable");
 			};
+
+			int idx = StreamReader.readUint32Var(stream);
+			return view -> new TableInsn(type, view.tables().get(idx));
 		}
 
 		// Memory instructions
@@ -583,6 +625,32 @@ public class CodeParser {
 		case F64_MIN: return $ -> NumericBinaryOpInsn.F64_MIN;
 		case F64_MAX: return $ -> NumericBinaryOpInsn.F64_MAX;
 		case F64_COPYSIGN: return $ -> NumericBinaryOpInsn.F64_COPYSIGN;
+
+		case I32_WRAP_I64: return $ -> NumericConvertInsn.I32_WRAP_I64;
+		case I32_TRUNC_F32_S: return $ -> NumericConvertInsn.I32_TRUNC_F32_S;
+		case I32_TRUNC_F32_U: return $ -> NumericConvertInsn.I32_TRUNC_F32_U;
+		case I32_TRUNC_F64_S: return $ -> NumericConvertInsn.I32_TRUNC_F64_S;
+		case I32_TRUNC_F64_U: return $ -> NumericConvertInsn.I32_TRUNC_F64_U;
+		case I64_EXTEND_I32_S: return $ -> NumericConvertInsn.I64_EXTEND_I32_S;
+		case I64_EXTEND_I32_U: return $ -> NumericConvertInsn.I64_EXTEND_I32_U;
+		case I64_TRUNC_F32_S: return $ -> NumericConvertInsn.I64_TRUNC_F32_S;
+		case I64_TRUNC_F32_U: return $ -> NumericConvertInsn.I64_TRUNC_F32_U;
+		case I64_TRUNC_F64_S: return $ -> NumericConvertInsn.I64_TRUNC_F64_S;
+		case I64_TRUNC_F64_U: return $ -> NumericConvertInsn.I64_TRUNC_F64_U;
+		case F32_CONVERT_I32_S: return $ -> NumericConvertInsn.F32_CONVERT_I32_S;
+		case F32_CONVERT_I32_U: return $ -> NumericConvertInsn.F32_CONVERT_I32_U;
+		case F32_CONVERT_I64_S: return $ -> NumericConvertInsn.F32_CONVERT_I64_S;
+		case F32_CONVERT_I64_U: return $ -> NumericConvertInsn.F32_CONVERT_I64_U;
+		case F32_DEMOTE_F64: return $ -> NumericConvertInsn.F32_DEMOTE_F64;
+		case F64_CONVERT_I32_S: return $ -> NumericConvertInsn.F64_CONVERT_I32_S;
+		case F64_CONVERT_I32_U: return $ -> NumericConvertInsn.F64_CONVERT_I32_U;
+		case F64_CONVERT_I64_S: return $ -> NumericConvertInsn.F64_CONVERT_I64_S;
+		case F64_CONVERT_I64_U: return $ -> NumericConvertInsn.F64_CONVERT_I64_U;
+		case F64_PROMOTE_F32: return $ -> NumericConvertInsn.F64_PROMOTE_F32;
+		case I32_REINTERPRET_F32: return $ -> NumericConvertInsn.I32_REINTERPRET_F32;
+		case F32_REINTERPRET_I32: return $ -> NumericConvertInsn.F32_REINTERPRET_I32;
+		case I64_REINTERPRET_F64: return $ -> NumericConvertInsn.I64_REINTERPRET_F64;
+		case F64_REINTERPRET_I64: return $ -> NumericConvertInsn.F64_REINTERPRET_I64;
 
 		// Reference instructions
 		case REF_NULL: {

@@ -3,11 +3,13 @@ package tinywasmr.engine.exec.instance;
 import java.util.Collection;
 import java.util.List;
 
+import tinywasmr.engine.exec.global.Global;
 import tinywasmr.engine.exec.memory.Memory;
 import tinywasmr.engine.exec.table.Table;
 import tinywasmr.engine.module.CustomSection;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.func.FunctionDecl;
+import tinywasmr.engine.module.global.GlobalDecl;
 import tinywasmr.engine.module.memory.DataSegment;
 import tinywasmr.engine.module.memory.MemoryDecl;
 import tinywasmr.engine.module.table.TableDecl;
@@ -67,6 +69,13 @@ public interface Instance {
 	}
 
 	Collection<Export> exports();
+
+	List<Global> globals();
+
+	default Global global(GlobalDecl decl) {
+		for (Global global : globals()) if (global.declaration() == decl) return global;
+		return null;
+	}
 
 	/**
 	 * <p>
