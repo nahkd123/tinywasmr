@@ -2,7 +2,6 @@ package tinywasmr.extern;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -50,34 +49,34 @@ public class ReflectedWasmModule<T> implements WasmModule {
 	}
 
 	@Override
-	public Collection<CustomSection> custom() {
+	public List<CustomSection> custom() {
 		return Collections.emptyList();
 	}
 
 	@Override
-	public Collection<ImportDecl> declaredImports() {
+	public List<ImportDecl> declaredImports() {
 		return Collections.emptyList();
 	}
 
 	@Override
-	public Collection<ExportDecl> declaredExports() {
+	public List<ExportDecl> declaredExports() {
 		return exports;
 	}
 
 	@Override
-	public Collection<TableDecl> declaredTables() {
+	public List<TableDecl> declaredTables() {
 		// TODO Auto-generated method stub
 		return Collections.emptyList();
 	}
 
 	@Override
-	public Collection<MemoryDecl> declaredMemories() {
+	public List<MemoryDecl> declaredMemories() {
 		// TODO Auto-generated method stub
 		return Collections.emptyList();
 	}
 
 	@Override
-	public Collection<FunctionDecl> declaredFunctions() {
+	public List<FunctionDecl> declaredFunctions() {
 		return functions;
 	}
 }

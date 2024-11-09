@@ -1,6 +1,7 @@
 package tinywasmr.engine.exec.instance;
 
 import java.util.Collection;
+import java.util.List;
 
 import tinywasmr.engine.exec.memory.Memory;
 import tinywasmr.engine.exec.table.Table;
@@ -31,25 +32,25 @@ public interface Instance {
 	 * instance.
 	 * </p>
 	 */
-	default Collection<CustomSection> custom() {
+	default List<CustomSection> custom() {
 		return module().custom();
 	}
 
-	Collection<Function> functions();
+	List<Function> functions();
 
 	default Function function(FunctionDecl decl) {
 		for (Function function : functions()) if (function.declaration() == decl) return function;
 		return null;
 	}
 
-	Collection<Table> tables();
+	List<Table> tables();
 
 	default Table table(TableDecl decl) {
 		for (Table table : tables()) if (table.declaration() == decl) return table;
 		return null;
 	}
 
-	Collection<Memory> memories();
+	List<Memory> memories();
 
 	default Memory memory(MemoryDecl decl) {
 		for (Memory memory : memories()) if (memory.declaration() == decl) return memory;

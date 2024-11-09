@@ -1,7 +1,6 @@
 package tinywasmr.parser;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import tinywasmr.engine.module.CustomSection;
@@ -41,12 +40,12 @@ public class ParsedWasmModule implements WasmModule {
 	}
 
 	@Override
-	public Collection<MemoryDecl> declaredMemories() {
+	public List<MemoryDecl> declaredMemories() {
 		return memories;
 	}
 
 	@Override
-	public Collection<FunctionDecl> declaredFunctions() {
+	public List<FunctionDecl> declaredFunctions() {
 		return functions;
 	}
 }
