@@ -28,9 +28,11 @@ import tinywasmr.extern.ReflectedInstance;
 import tinywasmr.extern.ReflectedModule;
 import tinywasmr.parser.binary.BinaryModuleParser;
 import tinywasmr.w4.gui.FilePicker;
+import tinywasmr.w4.gui.W4Screen;
 
 public class Main extends Application {
 	private ImFont font;
+	private W4Screen screen;
 
 	// Current game
 	private ReflectedModule<W4Environment> envModule;
@@ -68,7 +70,10 @@ public class Main extends Application {
 		ImGuiIO io = ImGui.getIO();
 		io.setIniFilename(null);
 		io.addConfigFlags(ImGuiConfigFlags.DockingEnable);
+		io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable);
 		io.getFonts().addFontFromFileTTF("C:\\Windows\\Fonts\\consola.ttf", 16f);
+
+		screen = new W4Screen();
 	}
 
 	@Override
@@ -113,6 +118,11 @@ public class Main extends Application {
 				() -> running = true,
 				() -> running = false,
 				this::stepIn, this::stepNext, this::stepOut);
+			ImGui.end();
+		}
+
+		if (ImGui.begin("WASM-4 Screen")) {
+			screen.screen(env != null ? env.object() : null, 320);
 			ImGui.end();
 		}
 
