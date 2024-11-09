@@ -49,7 +49,6 @@ public class W4Screen implements AutoCloseable {
 			0xFF000000 | w4.getPaletteBGR(2),
 			0xFF000000 | w4.getPaletteBGR(3),
 		};
-		System.out.println("screen bg = %06x".formatted(palette[0]));
 
 		for (int row = 0; row < SCREEN_SIZE; row++) {
 			int rowStart = row * SCREEN_SIZE;
@@ -57,10 +56,10 @@ public class W4Screen implements AutoCloseable {
 				int b4addr = W4Environment.FRAMEBUFFER_ADDRESS + row * BYTE_PER_ROW + col / PX_PER_BYTE;
 				int colIdx = rowStart + col;
 				byte b4 = ram[b4addr];
-				pixels[colIdx + 0] = palette[(b4 & 0b11000000) >> 6];
-				pixels[colIdx + 1] = palette[(b4 & 0b00110000) >> 4];
-				pixels[colIdx + 2] = palette[(b4 & 0b00001100) >> 2];
-				pixels[colIdx + 3] = palette[b4 & 0b00000011];
+				pixels[colIdx + 0] = palette[b4 & 0b00000011];
+				pixels[colIdx + 1] = palette[(b4 & 0b00001100) >> 2];
+				pixels[colIdx + 2] = palette[(b4 & 0b00110000) >> 4];
+				pixels[colIdx + 3] = palette[(b4 & 0b11000000) >> 6];
 			}
 		}
 

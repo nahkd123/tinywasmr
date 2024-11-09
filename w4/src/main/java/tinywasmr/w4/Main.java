@@ -122,7 +122,7 @@ public class Main extends Application {
 		}
 
 		if (ImGui.begin("WASM-4 Screen")) {
-			screen.screen(env != null ? env.object() : null, 320);
+			screen.screen(env != null ? env.object() : null, W4Environment.SCREEN_SIZE * 3);
 			ImGui.end();
 		}
 
