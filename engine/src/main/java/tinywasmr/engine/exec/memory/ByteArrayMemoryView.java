@@ -12,13 +12,13 @@ import tinywasmr.engine.module.memory.MemoryDecl;
  */
 public record ByteArrayMemoryView(MemoryDecl declaration, int pageCount, byte[] content) implements Memory {
 	public ByteArrayMemoryView {
-		if (content.length > pageCount * PAGE_SIZE)
+		if (content.length > (pageCount * PAGE_SIZE))
 			throw new IllegalArgumentException("length of content is more than pageCount * 65536 (%d > %d)"
-				.formatted(content.length, pageCount & PAGE_SIZE));
+				.formatted(content.length, pageCount * PAGE_SIZE));
 	}
 
 	public ByteArrayMemoryView(MemoryDecl declaration, byte[] content) {
-		this(declaration, (1 + (content.length - 1) / PAGE_SIZE) * PAGE_SIZE, content);
+		this(declaration, 1 + ((content.length - 1) / PAGE_SIZE), content);
 	}
 
 	public ByteArrayMemoryView(byte[] content) {
