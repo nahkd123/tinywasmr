@@ -333,10 +333,15 @@ public class CodeParser {
 					if (insn != IF) throw new IOException("Only if block can use else instruction");
 					if (current == secondary) throw new IOException("Cannot use 2 consecutive else instructions");
 					current = secondary;
+					continue;
 				}
 
-				BinaryInstructionBuilder builder = parseInsn(childInsn, stream);
-				current.add(builder);
+				try {
+					BinaryInstructionBuilder builder = parseInsn(childInsn, stream);
+					current.add(builder);
+				} catch (RuntimeException e) {
+					throw new RuntimeException("Exception thrown while parsing block 0x%02x insn 0x%02x".formatted(insn, childInsn), e);
+				}
 			}
 
 			return view -> {
