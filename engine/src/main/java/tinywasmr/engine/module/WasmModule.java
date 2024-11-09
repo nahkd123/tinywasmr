@@ -2,6 +2,7 @@ package tinywasmr.engine.module;
 
 import java.util.List;
 
+import tinywasmr.engine.exec.instance.InitializerFunctionDecl;
 import tinywasmr.engine.module.export.ExportDecl;
 import tinywasmr.engine.module.func.FunctionDecl;
 import tinywasmr.engine.module.imprt.ImportDecl;
@@ -23,4 +24,8 @@ public interface WasmModule {
 	List<MemoryDecl> declaredMemories();
 
 	List<FunctionDecl> declaredFunctions();
+
+	default InitializerFunctionDecl initFunction() {
+		return new InitializerFunctionDecl(this);
+	}
 }

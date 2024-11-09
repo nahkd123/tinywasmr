@@ -34,6 +34,7 @@ public class DefaultInstance implements Instance {
 	private Map<TableDecl, Table> declToTable;
 	private Map<MemoryDecl, Memory> declToMemory;
 	private Map<String, Export> exports;
+	private Function initFunction;
 
 	public DefaultInstance(WasmModule module, Importer importer) {
 		this.module = module;
@@ -45,14 +46,13 @@ public class DefaultInstance implements Instance {
 		this.declToMemory = new HashMap<>();
 		this.exports = new HashMap<>();
 		setup(importer);
+		this.initFunction = new Function(this, module.initFunction());
 	}
 
 	private void setup(Importer importer) {
 		if (module.declaredImports().size() > 0 && importer == null) {
 			throw new IllegalArgumentException("The module have at least 1 import; an importer must be provided.");
 		}
-
-		// TODO initialize everything
 
 		for (TableDecl decl : module.declaredTables()) {
 			Table table;
@@ -150,6 +150,11 @@ public class DefaultInstance implements Instance {
 	@Override
 	public WasmModule module() {
 		return module;
+	}
+
+	@Override
+	public Function initFunction() {
+		return initFunction;
 	}
 
 	@Override

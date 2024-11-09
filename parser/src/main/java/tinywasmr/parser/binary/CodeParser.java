@@ -22,6 +22,8 @@ import tinywasmr.engine.insn.control.CallInsn;
 import tinywasmr.engine.insn.control.ControlInsn;
 import tinywasmr.engine.insn.control.IfInsn;
 import tinywasmr.engine.insn.control.LoopInsn;
+import tinywasmr.engine.insn.memory.DataDropInsn;
+import tinywasmr.engine.insn.memory.DataInitInsn;
 import tinywasmr.engine.insn.memory.LoadInsn;
 import tinywasmr.engine.insn.memory.LoadType;
 import tinywasmr.engine.insn.memory.MemoryArg;
@@ -228,7 +230,7 @@ public class CodeParser {
 	public static final int REF_FUNC = 0xD2;
 
 	// Memory instructions (extended)
-	public static final int MEMORY_INIT = 0xFC08;
+	public static final int DATA_INIT = 0xFC08;
 	public static final int DATA_DROP = 0xFC09;
 	public static final int MEMORY_COPY = 0xFC0A;
 	public static final int MEMORY_FILL = 0xFC0B;
@@ -435,8 +437,35 @@ public class CodeParser {
 			default -> throw new RuntimeException("Unreachable");
 			};
 		}
-		case MEMORY_SIZE: return view -> new MemoryInsn(MemoryInsnType.SIZE, view.memories().get(0));
-		case MEMORY_GROW: return view -> new MemoryInsn(MemoryInsnType.GROW, view.memories().get(0));
+		case MEMORY_SIZE:
+		case MEMORY_GROW:
+		case MEMORY_FILL: {
+			int idx = StreamReader.readUint32Var(stream);
+			if (idx != 0) throw new IOException("WebAssembly does not support multiple memories yet");
+			return switch (insn) {
+			case MEMORY_SIZE -> view -> new MemoryInsn(MemoryInsnType.SIZE, view.memories().get(idx));
+			case MEMORY_GROW -> view -> new MemoryInsn(MemoryInsnType.GROW, view.memories().get(idx));
+			case MEMORY_FILL -> view -> new MemoryInsn(MemoryInsnType.FILL, view.memories().get(idx));
+			default -> throw new RuntimeException("Unreachable");
+			};
+		}
+		case MEMORY_COPY: {
+			int srcidx = StreamReader.readUint32Var(stream);
+			if (srcidx != 0) throw new IOException("WebAssembly does not support multiple memories yet");
+			int dstidx = StreamReader.readUint32Var(stream);
+			if (dstidx != 0) throw new IOException("WebAssembly does not support multiple memories yet");
+			return view -> new MemoryInsn(MemoryInsnType.COPY, view.memories().get(srcidx));
+		}
+		case DATA_INIT: {
+			int segidx = StreamReader.readUint32Var(stream);
+			int memidx = StreamReader.readUint32Var(stream);
+			if (memidx != 0) throw new IOException("WebAssembly does not support multiple memories yet");
+			return view -> new DataInitInsn(view.data().get(segidx), view.memories().get(memidx));
+		}
+		case DATA_DROP: {
+			int segidx = StreamReader.readUint32Var(stream);
+			return view -> new DataDropInsn(view.data().get(segidx));
+		}
 
 		// Numeric instructions
 		case I32_CONST:

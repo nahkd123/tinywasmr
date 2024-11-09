@@ -1,5 +1,7 @@
 package tinywasmr.engine.exec.memory;
 
+import java.util.Arrays;
+
 import tinywasmr.engine.module.memory.MemoryDecl;
 
 public class DefaultMemory implements Memory {
@@ -76,6 +78,13 @@ public class DefaultMemory implements Memory {
 			byte[] pageData = pages[page];
 			int effectiveSourceOffset = sourceOffset + PAGE_SIZE * (page - pageStart);
 			System.arraycopy(source, effectiveSourceOffset, pageData, pageOffset, pageCount);
+		});
+	}
+
+	@Override
+	public void fill(int memoryOffset, int byteVal, int count) {
+		partitionByPage(memoryOffset, count, (page, pageOffset, pageCount) -> {
+			Arrays.fill(pages[page], pageOffset, pageOffset + pageCount, (byte) byteVal);
 		});
 	}
 }

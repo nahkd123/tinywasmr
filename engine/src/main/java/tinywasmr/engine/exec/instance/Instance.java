@@ -27,6 +27,10 @@ public interface Instance {
 	 */
 	WasmModule module();
 
+	default Function initFunction() {
+		return new Function(this, module().initFunction());
+	}
+
 	/**
 	 * <p>
 	 * Get a collection of custom sections in the module that linked to this

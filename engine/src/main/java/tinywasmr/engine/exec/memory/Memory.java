@@ -84,6 +84,17 @@ public interface Memory extends Exportable {
 	 */
 	void write(int memoryOffset, byte[] source, int sourceOffset, int count);
 
+	/**
+	 * <p>
+	 * Fill the memory with specified byte value.
+	 * </p>
+	 * 
+	 * @param memoryOffset The offset in this memory instance, in bytes.
+	 * @param byteVal      The byte value from 0 to 255.
+	 * @param count        The number of bytes to fill.
+	 */
+	void fill(int memoryOffset, int byteVal, int count);
+
 	default void write(int memoryOffset, byte[] source) {
 		write(memoryOffset, source, 0, source.length);
 	}

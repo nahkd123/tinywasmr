@@ -102,9 +102,13 @@ class BinaryModuleParserTest {
 	void testData() {
 		ParsedWasmModule module = load("binary/007_data.wasm");
 		Instance instance = new DefaultInstance(module, null);
+		instance.initFunction().exec();
 		instance.export("main").asFunction().exec();
 		assertArrayEquals(
 			"world".getBytes(StandardCharsets.US_ASCII),
-			instance.export("memory").asMemory().read(10, 5));
+			instance.export("memory").asMemory().read(10, 5)); // copied from passive segment
+		assertArrayEquals(
+			"hello".getBytes(StandardCharsets.US_ASCII),
+			instance.export("memory").asMemory().read(0, 5)); // copied from active segment
 	}
 }
