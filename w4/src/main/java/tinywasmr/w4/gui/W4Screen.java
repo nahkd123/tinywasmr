@@ -7,12 +7,12 @@ import static org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER;
 import static org.lwjgl.opengl.GL11.GL_UNPACK_ROW_LENGTH;
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
-import static tinywasmr.w4.W4Environment.SCREEN_SIZE;
+import static tinywasmr.w4.W4Framebuffer.SCREEN_SIZE;
 
 import org.lwjgl.opengl.GL30;
 
 import imgui.internal.ImGui;
-import tinywasmr.w4.W4Environment;
+import tinywasmr.w4.W4Framebuffer;
 
 public class W4Screen implements AutoCloseable {
 	public static final int PX_PER_BYTE = 4;
@@ -40,20 +40,20 @@ public class W4Screen implements AutoCloseable {
 			0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	}
 
-	public void uploadTexture(W4Environment w4) {
-		byte[] ram = w4.getMemory();
+	public void uploadTexture(W4Framebuffer fb) {
+		byte[] ram = fb.getMemory();
 		int[] palette = new int[] {
 			// ABGR
-			0xFF000000 | w4.getPaletteBGR(0),
-			0xFF000000 | w4.getPaletteBGR(1),
-			0xFF000000 | w4.getPaletteBGR(2),
-			0xFF000000 | w4.getPaletteBGR(3),
+			0xFF000000 | fb.getPaletteBGR(0),
+			0xFF000000 | fb.getPaletteBGR(1),
+			0xFF000000 | fb.getPaletteBGR(2),
+			0xFF000000 | fb.getPaletteBGR(3),
 		};
 
 		for (int row = 0; row < SCREEN_SIZE; row++) {
 			int rowStart = row * SCREEN_SIZE;
 			for (int col = 0; col < SCREEN_SIZE; col += PX_PER_BYTE) {
-				int b4addr = W4Environment.FRAMEBUFFER_ADDRESS + row * BYTE_PER_ROW + col / PX_PER_BYTE;
+				int b4addr = W4Framebuffer.BASE + row * BYTE_PER_ROW + col / PX_PER_BYTE;
 				int colIdx = rowStart + col;
 				byte b4 = ram[b4addr];
 				pixels[colIdx + 0] = palette[b4 & 0b00000011];
@@ -70,8 +70,8 @@ public class W4Screen implements AutoCloseable {
 			0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	}
 
-	public void screen(W4Environment w4, float screenSize) {
-		if (w4 != null) uploadTexture(w4);
+	public void screen(W4Framebuffer fb, float screenSize) {
+		if (fb != null) uploadTexture(fb);
 		ImGui.image(texId, screenSize, screenSize);
 	}
 
