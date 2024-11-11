@@ -6,7 +6,7 @@ import tinywasmr.engine.insn.Instruction;
 import tinywasmr.engine.module.memory.DataSegment;
 import tinywasmr.engine.module.memory.MemoryDecl;
 
-public record DataInitInsn(DataSegment segment, MemoryDecl memory) implements Instruction {
+public record MemoryInitInsn(DataSegment segment, MemoryDecl memory) implements Instruction {
 	@Override
 	public void execute(Machine vm) {
 		int count = vm.peekFrame().popOprand().i32();

@@ -17,16 +17,17 @@ import tinywasmr.engine.insn.Instruction;
 import tinywasmr.engine.insn.control.BlockInsn;
 import tinywasmr.engine.insn.control.BranchIfInsn;
 import tinywasmr.engine.insn.control.BranchInsn;
+import tinywasmr.engine.insn.control.BranchTableInsn;
 import tinywasmr.engine.insn.control.CallIndirectInsn;
 import tinywasmr.engine.insn.control.CallInsn;
 import tinywasmr.engine.insn.control.ControlInsn;
 import tinywasmr.engine.insn.control.IfInsn;
 import tinywasmr.engine.insn.control.LoopInsn;
 import tinywasmr.engine.insn.memory.DataDropInsn;
-import tinywasmr.engine.insn.memory.DataInitInsn;
 import tinywasmr.engine.insn.memory.LoadInsn;
 import tinywasmr.engine.insn.memory.LoadType;
 import tinywasmr.engine.insn.memory.MemoryArg;
+import tinywasmr.engine.insn.memory.MemoryInitInsn;
 import tinywasmr.engine.insn.memory.MemoryInsn;
 import tinywasmr.engine.insn.memory.MemoryInsnType;
 import tinywasmr.engine.insn.memory.StoreInsn;
@@ -366,6 +367,13 @@ public class CodeParser {
 			default -> throw new RuntimeException("Unreachable");
 			};
 		}
+		case BR_TABLE: {
+			int count = StreamReader.readUint32Var(stream);
+			int[] labels = new int[count];
+			for (int i = 0; i < count; i++) labels[i] = StreamReader.readUint32Var(stream);
+			int defaultLabel = StreamReader.readUint32Var(stream);
+			return $ -> new BranchTableInsn(labels, defaultLabel);
+		}
 		case RETURN: return $ -> ControlInsn.RETURN;
 		case CALL: {
 			int idx = StreamReader.readUint32Var(stream);
@@ -507,7 +515,7 @@ public class CodeParser {
 			int segidx = StreamReader.readUint32Var(stream);
 			int memidx = StreamReader.readUint32Var(stream);
 			if (memidx != 0) throw new IOException("WebAssembly does not support multiple memories yet");
-			return view -> new DataInitInsn(view.data().get(segidx), view.memories().get(memidx));
+			return view -> new MemoryInitInsn(view.data().get(segidx), view.memories().get(memidx));
 		}
 		case DATA_DROP: {
 			int segidx = StreamReader.readUint32Var(stream);
@@ -690,5 +698,12 @@ public class CodeParser {
 		default: throw new RuntimeException("Instruction not implemented: 0x%02x".formatted(insn));
 		}
 		// @formatter:on
+	}
+
+	public static List<BinaryInstructionBuilder> parseExpression(InputStream stream) throws IOException {
+		List<BinaryInstructionBuilder> expr = new ArrayList<>();
+		BinaryInstructionBuilder insn;
+		while ((insn = parseInsn(stream)) != null) expr.add(insn);
+		return expr;
 	}
 }

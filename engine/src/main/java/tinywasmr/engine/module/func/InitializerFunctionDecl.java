@@ -6,7 +6,8 @@ import java.util.List;
 import tinywasmr.engine.exec.value.NumberI32Value;
 import tinywasmr.engine.insn.ConstInsn;
 import tinywasmr.engine.insn.control.BlockInsn;
-import tinywasmr.engine.insn.memory.DataInitInsn;
+import tinywasmr.engine.insn.memory.MemoryInitInsn;
+import tinywasmr.engine.insn.table.TableInitInsn;
 import tinywasmr.engine.insn.variable.GlobalInsn;
 import tinywasmr.engine.insn.variable.GlobalInsnType;
 import tinywasmr.engine.module.WasmModule;
@@ -14,6 +15,8 @@ import tinywasmr.engine.module.global.GlobalDecl;
 import tinywasmr.engine.module.global.ModuleGlobalDecl;
 import tinywasmr.engine.module.memory.ActiveDataMode;
 import tinywasmr.engine.module.memory.DataSegment;
+import tinywasmr.engine.module.table.ActiveElementMode;
+import tinywasmr.engine.module.table.ElementSegment;
 import tinywasmr.engine.type.FunctionType;
 import tinywasmr.engine.type.value.NumberType;
 import tinywasmr.engine.type.value.ValueType;
@@ -30,7 +33,15 @@ public class InitializerFunctionDecl extends ModuleFunctionDecl {
 			body().add(new BlockInsn(NumberType.I32, activeMode.offsetExpr()));
 			body().add(new ConstInsn(new NumberI32Value(0)));
 			body().add(new ConstInsn(new NumberI32Value(segment.data().length)));
-			body().add(new DataInitInsn(segment, activeMode.memory()));
+			body().add(new MemoryInitInsn(segment, activeMode.memory()));
+		}
+
+		for (ElementSegment segment : module.elementSegments()) {
+			if (!(segment.mode() instanceof ActiveElementMode activeMode)) continue;
+			body().add(new BlockInsn(NumberType.I32, activeMode.offsetExpr()));
+			body().add(new ConstInsn(new NumberI32Value(0)));
+			body().add(new ConstInsn(new NumberI32Value(segment.init().size())));
+			body().add(new TableInitInsn(activeMode.table(), segment));
 		}
 
 		for (GlobalDecl global : module.declaredGlobals()) {

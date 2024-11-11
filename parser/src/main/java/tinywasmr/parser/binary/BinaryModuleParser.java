@@ -38,6 +38,7 @@ import tinywasmr.engine.module.memory.ImportMemoryDecl;
 import tinywasmr.engine.module.memory.MemoryDecl;
 import tinywasmr.engine.module.memory.ModuleMemoryDecl;
 import tinywasmr.engine.module.memory.PassiveDataMode;
+import tinywasmr.engine.module.table.ElementSegment;
 import tinywasmr.engine.module.table.ImportTableDecl;
 import tinywasmr.engine.module.table.ModuleTableDecl;
 import tinywasmr.engine.module.table.TableDecl;
@@ -75,6 +76,7 @@ public class BinaryModuleParser {
 	private BinaryGlobal[] globals;
 	private BinaryFunctionBody[] code;
 	private BinaryDataSegment[] data;
+	private BinaryElementSegment[] elements;
 	private Map<Integer, List<byte[]>> unknowns;
 
 	/**
@@ -131,6 +133,7 @@ public class BinaryModuleParser {
 		globals = new BinaryGlobal[0];
 		code = new BinaryFunctionBody[0];
 		data = new BinaryDataSegment[0];
+		elements = new BinaryElementSegment[0];
 		unknowns = new HashMap<>();
 	}
 
@@ -165,7 +168,7 @@ public class BinaryModuleParser {
 	}
 
 	public void parseSection(InputStream stream) throws IOException {
-		SectionHeader header = SectionParser.parseSectionHeader(stream);
+		SectionHeader header = SectionHeader.parse(stream);
 
 		// It is worth mentioning that some schizo compilers may choose to put anything
 		// before type section, like imports or code for example.
@@ -180,7 +183,7 @@ public class BinaryModuleParser {
 		case 0x06: globals = SectionParser.parseGlobalSection(header.size(), stream); break;
 		case 0x07: exports = SectionParser.parseExportSection(header.size(), stream); break;
 		case 0x08: throw new RuntimeException("0x08 start section not implemented");
-		case 0x09: throw new RuntimeException("0x09 element section not implemented");
+		case 0x09: elements = SectionParser.parseElementSection(header.size(), stream); break;
 		case 0x0A: code = SectionParser.parseCodeSection(header.size(), stream); break;
 		case 0x0B: data = SectionParser.parseDataSection(header.size(), stream); break;
 		case 0x0C: SectionParser.parseDataCountSection(header.size(), stream); break;
@@ -277,6 +280,9 @@ public class BinaryModuleParser {
 				binaryData.expression().forEach(b -> activeMode.offsetExpr().add(b.build(indicesView)));
 		}
 
+		// Resolving element segments
+		List<ElementSegment> elements = Stream.of(this.elements).map(binary -> binary.build(indicesView)).toList();
+
 		// Resolving global expressions (unwrapping instructions)
 		for (int i = 0; i < moduleGlobals.size(); i++) {
 			BinaryGlobal binary = this.globals[i];
@@ -299,6 +305,7 @@ public class BinaryModuleParser {
 		// Finalize
 		module.custom().addAll(custom);
 		module.dataSegments().addAll(data);
+		module.elementSegments().addAll(elements);
 		module.declaredImports().addAll(imports);
 		module.declaredTables().addAll(tables);
 		module.declaredMemories().addAll(memories);

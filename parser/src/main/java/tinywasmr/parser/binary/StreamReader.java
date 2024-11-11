@@ -103,23 +103,21 @@ public class StreamReader {
 	}
 
 	public static float readFloat32(InputStream stream) throws IOException {
-		byte[] bs = stream.readNBytes(4);
-		if (bs.length != 4) throw new EOFException("Expected to read 4 bytes but EOF found");
-		int i = (bs[0] & 0xff) << 24 | (bs[1] & 0xff) << 16 | (bs[2] & 0xff) << 8 | (bs[3] & 0xff);
+		int i = readInt32LE(stream);
 		return Float.intBitsToFloat(i);
 	}
 
 	public static double readFloat64(InputStream stream) throws IOException {
 		byte[] bs = stream.readNBytes(8);
 		if (bs.length != 8) throw new EOFException("Expected to read 8 bytes but EOF found");
-		long i = (bs[0] & 0xffL) << 56L
-			| (bs[1] & 0xffL) << 48L
-			| (bs[2] & 0xffL) << 40L
-			| (bs[3] & 0xffL) << 32L
-			| (bs[4] & 0xffL) << 24L
-			| (bs[5] & 0xffL) << 16L
-			| (bs[6] & 0xffL) << 8L
-			| (bs[7] & 0xffL);
+		long i = (bs[0] & 0xffL)
+			| (bs[1] & 0xffL) << 8L
+			| (bs[2] & 0xffL) << 16L
+			| (bs[3] & 0xffL) << 24L
+			| (bs[4] & 0xffL) << 32L
+			| (bs[5] & 0xffL) << 40L
+			| (bs[6] & 0xffL) << 48L
+			| (bs[7] & 0xffL) << 56L;
 		return Double.longBitsToDouble(i);
 	}
 

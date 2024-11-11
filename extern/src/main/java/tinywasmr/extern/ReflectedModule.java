@@ -16,6 +16,7 @@ import tinywasmr.engine.module.global.GlobalDecl;
 import tinywasmr.engine.module.imprt.ImportDecl;
 import tinywasmr.engine.module.memory.DataSegment;
 import tinywasmr.engine.module.memory.MemoryDecl;
+import tinywasmr.engine.module.table.ElementSegment;
 import tinywasmr.engine.module.table.TableDecl;
 import tinywasmr.extern.annotation.Export;
 import tinywasmr.extern.annotation.ExportType;
@@ -83,6 +84,11 @@ public class ReflectedModule<T> implements WasmModule {
 
 	@Override
 	public List<DataSegment> dataSegments() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public List<ElementSegment> elementSegments() {
 		return Collections.emptyList();
 	}
 

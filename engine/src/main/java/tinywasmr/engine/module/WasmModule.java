@@ -9,12 +9,15 @@ import tinywasmr.engine.module.global.GlobalDecl;
 import tinywasmr.engine.module.imprt.ImportDecl;
 import tinywasmr.engine.module.memory.DataSegment;
 import tinywasmr.engine.module.memory.MemoryDecl;
+import tinywasmr.engine.module.table.ElementSegment;
 import tinywasmr.engine.module.table.TableDecl;
 
 public interface WasmModule {
 	List<CustomSection> custom();
 
 	List<DataSegment> dataSegments();
+
+	List<ElementSegment> elementSegments();
 
 	List<ImportDecl> declaredImports();
 

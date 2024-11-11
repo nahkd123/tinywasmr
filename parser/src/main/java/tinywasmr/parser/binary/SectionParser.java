@@ -15,13 +15,6 @@ import tinywasmr.engine.type.value.ValueType;
 import tinywasmr.parser.binary.imprt.BinaryImport;
 
 public class SectionParser {
-	public static SectionHeader parseSectionHeader(InputStream stream) throws IOException {
-		int id = stream.read();
-		if (id == -1) throw new EOFException();
-		int size = StreamReader.readUint32Var(stream);
-		return new SectionHeader(id, size);
-	}
-
 	public static CustomSection parseCustomSection(int size, InputStream stream, boolean ignore) throws IOException {
 		if (ignore) {
 			if (size != 0) {
@@ -75,9 +68,9 @@ public class SectionParser {
 
 	public static BinaryGlobal[] parseGlobalSection(int size, InputStream stream) throws IOException {
 		int count = StreamReader.readUint32Var(stream);
-		BinaryGlobal[] memories = new BinaryGlobal[count];
-		for (int i = 0; i < count; i++) memories[i] = BinaryGlobal.parse(stream);
-		return memories;
+		BinaryGlobal[] globals = new BinaryGlobal[count];
+		for (int i = 0; i < count; i++) globals[i] = BinaryGlobal.parse(stream);
+		return globals;
 	}
 
 	public static BinaryImport[] parseImportSection(int size, InputStream stream) throws IOException {
@@ -92,6 +85,13 @@ public class SectionParser {
 		BinaryExport[] exports = new BinaryExport[count];
 		for (int i = 0; i < count; i++) exports[i] = BinaryExport.parse(stream);
 		return exports;
+	}
+
+	public static BinaryElementSegment[] parseElementSection(int size, InputStream stream) throws IOException {
+		int count = StreamReader.readUint32Var(stream);
+		BinaryElementSegment[] segments = new BinaryElementSegment[count];
+		for (int i = 0; i < count; i++) segments[i] = BinaryElementSegment.parse(stream);
+		return segments;
 	}
 
 	public static BinaryFunctionBody[] parseCodeSection(int size, InputStream stream) throws IOException {

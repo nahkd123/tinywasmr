@@ -15,12 +15,7 @@ public record BinaryDataSegment(int mode, int memidx, List<BinaryInstructionBuil
 		int mode = StreamReader.readUint32Var(stream);
 		int memidx = mode == MODE_ACTIVE_EXPLICT ? StreamReader.readUint32Var(stream) : 0;
 		List<BinaryInstructionBuilder> expr = new ArrayList<>();
-
-		if (mode == MODE_ACTIVE_0 || mode == MODE_ACTIVE_EXPLICT) {
-			BinaryInstructionBuilder insn;
-			while ((insn = CodeParser.parseInsn(stream)) != null) expr.add(insn);
-		}
-
+		if (mode == MODE_ACTIVE_0 || mode == MODE_ACTIVE_EXPLICT) expr = CodeParser.parseExpression(stream);
 		int size = StreamReader.readUint32Var(stream);
 		byte[] data = stream.readNBytes(size);
 		return new BinaryDataSegment(mode, memidx, expr, data);

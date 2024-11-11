@@ -18,22 +18,15 @@ public interface BranchBaseInsn extends Instruction {
 	 * stack). Obviously it is that weird in WebAssembly.
 	 * </p>
 	 */
-	public int nestIndex();
+	int nestIndex();
 
-	/**
-	 * <p>
-	 * By default, this will perform actions like unconditional branch. You can
-	 * extends this to branch based on specific condition.
-	 * </p>
-	 */
-	@Override
-	default void execute(Machine vm) {
+	static void execute(Machine vm, int index) {
 		FunctionFrame funcFrame = vm.peekFunctionFrame();
-		Frame targetFrame = vm.getFrameStack().get(vm.getFrameStack().size() - nestIndex() - 1);
+		Frame targetFrame = vm.getFrameStack().get(vm.getFrameStack().size() - index - 1);
 
 		if (targetFrame instanceof BlockFrame blockFrame && blockFrame.getBlock() instanceof LoopInsn loopInsn) {
 			// br act like continue statement
-			for (int i = 0; i <= nestIndex(); i++) {
+			for (int i = 0; i <= index; i++) {
 				Frame frame = vm.popFrame();
 				if (frame == targetFrame) break;
 				if (frame == funcFrame) break; // can't pop past function frame
@@ -53,7 +46,7 @@ public interface BranchBaseInsn extends Instruction {
 				results[i] = val;
 			}
 
-			for (int i = 0; i <= nestIndex(); i++) {
+			for (int i = 0; i <= index; i++) {
 				Frame frame = vm.popFrame();
 				if (frame == targetFrame) break;
 				if (frame == funcFrame) break; // can't pop past function frame
@@ -61,5 +54,16 @@ public interface BranchBaseInsn extends Instruction {
 
 			for (Value val : results) vm.peekFrame().pushOperand(val);
 		}
+	}
+
+	/**
+	 * <p>
+	 * By default, this will perform actions like unconditional branch. You can
+	 * extends this to branch based on specific condition.
+	 * </p>
+	 */
+	@Override
+	default void execute(Machine vm) {
+		execute(vm, nestIndex());
 	}
 }

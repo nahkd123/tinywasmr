@@ -12,11 +12,13 @@ import tinywasmr.engine.module.global.GlobalDecl;
 import tinywasmr.engine.module.imprt.ImportDecl;
 import tinywasmr.engine.module.memory.DataSegment;
 import tinywasmr.engine.module.memory.MemoryDecl;
+import tinywasmr.engine.module.table.ElementSegment;
 import tinywasmr.engine.module.table.TableDecl;
 
 public class ParsedWasmModule implements WasmModule {
 	private List<CustomSection> custom = new ArrayList<>();
 	private List<DataSegment> data = new ArrayList<>();
+	private List<ElementSegment> elements = new ArrayList<>();
 	private List<ImportDecl> imports = new ArrayList<>();
 	private List<ExportDecl> exports = new ArrayList<>();
 	private List<TableDecl> tables = new ArrayList<>();
@@ -33,6 +35,11 @@ public class ParsedWasmModule implements WasmModule {
 	@Override
 	public List<DataSegment> dataSegments() {
 		return data;
+	}
+
+	@Override
+	public List<ElementSegment> elementSegments() {
+		return elements;
 	}
 
 	@Override
