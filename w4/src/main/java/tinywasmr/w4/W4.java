@@ -155,7 +155,11 @@ public class W4 implements DebugInterface {
 	}
 
 	private void stepIn() {
-		if (machine.getTrap() != null) return;
+		if (machine.getTrap() != null) {
+			running = false;
+			return;
+		}
+
 		StepResult result = machine.peekFrame() == machine.getExternalFrame() ? stepInHost() : executor.step(machine);
 
 		if (result == StepResult.TRAP) {
