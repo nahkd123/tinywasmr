@@ -94,6 +94,12 @@ public class Main extends Application {
 				W4Input.BUTTON_RIGHT, List.of(new KeyCombination(GLFW.GLFW_KEY_D)),
 				W4Input.BUTTON_1, List.of(new KeyCombination(GLFW.GLFW_KEY_TAB)),
 				W4Input.BUTTON_2, List.of(new KeyCombination(GLFW.GLFW_KEY_Q)))),
+			KeybindGroup.ofGamepad(2, (flag, state) -> {
+				if (console != null) console.getInput().setGamepad(2, flag, state);
+			}, Map.of()),
+			KeybindGroup.ofGamepad(3, (flag, state) -> {
+				if (console != null) console.getInput().setGamepad(3, flag, state);
+			}, Map.of()),
 			new KeybindGroup("Debugger", List.of(
 				keybindPause = new KeybindEntry("Pause/Resume Execution", action -> {
 					if (action != GLFW.GLFW_PRESS) return;
