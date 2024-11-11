@@ -44,6 +44,7 @@ public class Main extends Application {
 	private MachineInspector inspector;
 	private MachineController controller;
 	private boolean showInspector = false;
+	private boolean showCodeViewer = false;
 	private boolean showController = false;
 	private KeybindEntry keybindPause;
 	private KeybindEntry keybindStepIn;
@@ -229,6 +230,7 @@ public class Main extends Application {
 
 	private void debuggerWindowMenu() {
 		if (ImGui.menuItem("Machine Inspector", showInspector)) showInspector = !showInspector;
+		if (ImGui.menuItem("Code Viewer", showCodeViewer)) showCodeViewer = !showCodeViewer;
 		if (ImGui.menuItem("Machine Controller", showController)) showController = !showController;
 	}
 
@@ -248,6 +250,11 @@ public class Main extends Application {
 	private void debuggerWindows() {
 		if (showInspector) {
 			if (ImGui.begin("Machine Inspector")) inspector.inspector(console);
+			ImGui.end();
+		}
+
+		if (showCodeViewer) {
+			if (ImGui.begin("Code Viewer")) inspector.codeViewer(console);
 			ImGui.end();
 		}
 

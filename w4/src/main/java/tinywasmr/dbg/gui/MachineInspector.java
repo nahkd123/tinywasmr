@@ -5,6 +5,8 @@ import java.util.List;
 
 import imgui.ImGui;
 import imgui.flag.ImGuiTreeNodeFlags;
+import imgui.type.ImString;
+import tinywasmr.dbg.AutoDebugSymbols;
 import tinywasmr.dbg.DebugInterface;
 import tinywasmr.dbg.DebugSymbols;
 import tinywasmr.dbg.ValueDisplayMode;
@@ -13,6 +15,10 @@ import tinywasmr.engine.exec.frame.ExternalFrame;
 import tinywasmr.engine.exec.frame.Frame;
 import tinywasmr.engine.exec.frame.FunctionFrame;
 import tinywasmr.engine.exec.vm.Machine;
+import tinywasmr.engine.insn.ConstInsn;
+import tinywasmr.engine.insn.Instruction;
+import tinywasmr.engine.insn.control.BranchBaseInsn;
+import tinywasmr.engine.insn.variable.LocalInsn;
 import tinywasmr.engine.type.value.NumberType;
 import tinywasmr.engine.type.value.RefType;
 import tinywasmr.engine.type.value.ValueType;
@@ -21,6 +27,9 @@ import tinywasmr.engine.type.value.VectorType;
 public class MachineInspector {
 	private int[] valueDisplayMode = new int[] { 1 };
 	private ValueDisplayMode[] allValueDisplayModes = ValueDisplayMode.values();
+
+	private Frame selectedFrame = null;
+	private ImString functionName = new ImString(1024);
 
 	public void inspector(DebugInterface debug) {
 		ValueDisplayMode valueDisplay = allValueDisplayModes[valueDisplayMode[0]];
@@ -45,9 +54,55 @@ public class MachineInspector {
 		}
 	}
 
+	public void codeViewer(DebugInterface debug) {
+		if (debug == null) {
+			selectedFrame = null;
+			ImGui.text("Waiting for debugger...");
+			return;
+		}
+
+		if (selectedFrame == null) {
+			ImGui.text("Open in Machine Inspector to browse code!");
+			ImGui.text("Click on 'Go to' button to open.");
+			return;
+		}
+
+		if (ImGui.button("Close frame")) {
+			selectedFrame = null;
+			return;
+		}
+
+		ImGui.sameLine();
+
+		if (selectedFrame instanceof FunctionFrame ff && debug.getSymbols() instanceof AutoDebugSymbols auto) {
+			if (ImGui.inputText("Function name", functionName))
+				auto.setName(ff.getFunction().declaration(), functionName.get());
+		} else {
+			ImGui.text("%s".formatted(selectedFrame));
+		}
+
+		List<Instruction> insns = selectedFrame.getExecutingInsns();
+
+		for (int i = 0; i < insns.size(); i++) {
+			Instruction insn = insns.get(i);
+			boolean isCurrent = selectedFrame.getInsnIndex() == i;
+
+			ImGui.beginGroup();
+			ImGui.text("%s %s".formatted(isCurrent ? '>' : ' ', insnToString(insn)));
+			ImGui.endGroup();
+		}
+	}
+
+	public static String insnToString(Instruction insn) {
+		if (insn instanceof LocalInsn local) return "local.%s %s".formatted(local.type(), local.index());
+		if (insn instanceof ConstInsn constant) return "constant of %s".formatted(constant.value());
+		if (insn instanceof BranchBaseInsn br) return "%s %d".formatted(br.getClass().getSimpleName(), br.nestIndex());
+		return insn.toString();
+	}
+
 	public void overview(Machine vm, DebugSymbols symbols) {
 		if (vm == null) {
-			ImGui.text("Machine is not loaded");
+			ImGui.text("Waiting for debugger...");
 			return;
 		}
 
@@ -67,9 +122,17 @@ public class MachineInspector {
 
 		if (ImGui.treeNodeEx(id, ImGuiTreeNodeFlags.NoTreePushOnOpen, "%03d: %s".formatted(id, name))) {
 			ImGui.indent();
+			ImGui.pushID(id);
 
 			if (!(frame instanceof ExternalFrame)) {
-				ImGui.button("Go to");
+				if (ImGui.button("Go to")) {
+					selectedFrame = frame;
+
+					if (frame instanceof FunctionFrame ff) {
+						String fname = symbols.nameOf(ff.getFunction().declaration());
+						functionName.set(fname);
+					}
+				}
 
 				int currStep = frame.getInsnIndex();
 				int maxStep = frame.getExecutingInsns().size();
@@ -98,6 +161,7 @@ public class MachineInspector {
 				ImGui.text("%03d: %4s | %s".formatted(i, type, val));
 			}
 
+			ImGui.popID();
 			ImGui.unindent();
 		}
 	}
