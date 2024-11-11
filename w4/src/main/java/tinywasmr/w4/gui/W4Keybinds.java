@@ -10,6 +10,7 @@ import org.lwjgl.glfw.GLFW;
 
 import imgui.ImGui;
 import imgui.flag.ImGuiTableColumnFlags;
+import imgui.flag.ImGuiTreeNodeFlags;
 import imgui.flag.ImGuiWindowFlags;
 
 public class W4Keybinds {
@@ -92,7 +93,10 @@ public class W4Keybinds {
 	}
 
 	public void imgui(KeybindEntry entry) {
-		if (ImGui.collapsingHeader(entry.name())) {
+		if (ImGui.treeNodeEx(
+			entry.name(),
+			ImGuiTreeNodeFlags.NoTreePushOnOpen,
+			"%s [%s]".formatted(entry.name(), entry.getKeybindNames()))) {
 			ImGui.indent();
 			ImGui.pushID(entry.name());
 			if (ImGui.button("Reset")) entry.reset();
