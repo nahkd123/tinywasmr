@@ -69,7 +69,7 @@ public class MachineInspector {
 			ImGui.indent();
 
 			if (!(frame instanceof ExternalFrame)) {
-				ImGui.button("Code browser");
+				ImGui.button("Go to");
 
 				int currStep = frame.getInsnIndex();
 				int maxStep = frame.getExecutingInsns().size();
@@ -78,21 +78,24 @@ public class MachineInspector {
 			}
 
 			if (frame instanceof FunctionFrame func) {
-				ImGui.labelText("Locals", Integer.toString(func.getLocals().length));
+				ImGui.text("Locals: %d".formatted(func.getLocals().length));
+				ImGui.indent();
 
 				for (int i = 0; i < func.getLocals().length; i++) {
 					String type = typeToString(func.getLocals()[i].type());
 					String val = valueDisplay.asString(func.getLocals()[i], symbols);
-					ImGui.labelText("Local %d".formatted(i), "%8s | %s".formatted(type, val));
+					ImGui.text("%03d: %4s | %s".formatted(i, type, val));
 				}
+
+				ImGui.unindent();
 			}
 
-			ImGui.labelText("Operands", Integer.toString(frame.getOperandStack().size()));
+			ImGui.text("Operands: %d".formatted(frame.getOperandStack().size()));
 
 			for (int i = 0; i < frame.getOperandStack().size(); i++) {
 				String type = typeToString(frame.getOperandStack().get(i).type());
 				String val = valueDisplay.asString(frame.getOperandStack().get(i), symbols);
-				ImGui.labelText("Operand %d".formatted(i), "%8s | %s".formatted(type, val));
+				ImGui.text("%03d: %4s | %s".formatted(i, type, val));
 			}
 
 			ImGui.unindent();
