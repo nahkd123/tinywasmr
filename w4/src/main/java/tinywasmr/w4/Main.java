@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
+import java.util.Map;
 
 import org.lwjgl.glfw.GLFW;
 
@@ -39,11 +40,15 @@ public class Main extends Application {
 
 	private W4 console;
 
-	// Debugger GUI
+	// Debugger
 	private MachineInspector inspector;
 	private MachineController controller;
 	private boolean showInspector = false;
 	private boolean showController = false;
+	private KeybindEntry keybindPause;
+	private KeybindEntry keybindStepIn;
+	private KeybindEntry keybindStepNext;
+	private KeybindEntry keybindStepOut;
 
 	// Other
 	private boolean showAboutTinyWasmR = false;
@@ -71,37 +76,46 @@ public class Main extends Application {
 
 		screen = new W4Screen();
 		keybinds = new W4Keybinds(List.of(
-			new KeybindGroup("Gamepad #1", List.of(
-				new KeybindEntry("Up", action -> {
-					boolean down = action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT;
+			KeybindGroup.ofGamepad(0, (flag, state) -> {
+				if (console != null) console.getInput().setGamepad(0, flag, state);
+			}, Map.of(
+				W4Input.BUTTON_UP, List.of(new KeyCombination(GLFW.GLFW_KEY_UP)),
+				W4Input.BUTTON_DOWN, List.of(new KeyCombination(GLFW.GLFW_KEY_DOWN)),
+				W4Input.BUTTON_LEFT, List.of(new KeyCombination(GLFW.GLFW_KEY_LEFT)),
+				W4Input.BUTTON_RIGHT, List.of(new KeyCombination(GLFW.GLFW_KEY_RIGHT)),
+				W4Input.BUTTON_1, List.of(new KeyCombination(GLFW.GLFW_KEY_X)),
+				W4Input.BUTTON_2, List.of(new KeyCombination(GLFW.GLFW_KEY_Z)))),
+			KeybindGroup.ofGamepad(1, (flag, state) -> {
+				if (console != null) console.getInput().setGamepad(1, flag, state);
+			}, Map.of(
+				W4Input.BUTTON_UP, List.of(new KeyCombination(GLFW.GLFW_KEY_W)),
+				W4Input.BUTTON_DOWN, List.of(new KeyCombination(GLFW.GLFW_KEY_S)),
+				W4Input.BUTTON_LEFT, List.of(new KeyCombination(GLFW.GLFW_KEY_A)),
+				W4Input.BUTTON_RIGHT, List.of(new KeyCombination(GLFW.GLFW_KEY_D)),
+				W4Input.BUTTON_1, List.of(new KeyCombination(GLFW.GLFW_KEY_TAB)),
+				W4Input.BUTTON_2, List.of(new KeyCombination(GLFW.GLFW_KEY_Q)))),
+			new KeybindGroup("Debugger", List.of(
+				keybindPause = new KeybindEntry("Pause/Resume Execution", action -> {
+					if (action != GLFW.GLFW_PRESS) return;
 					if (console == null) return;
-					console.getInput().setGamepad(0, W4Input.BUTTON_UP, down);
-				}, new KeyCombination(GLFW.GLFW_KEY_W), new KeyCombination(GLFW.GLFW_KEY_UP)),
-				new KeybindEntry("Down", action -> {
-					boolean down = action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT;
+					if (console.isRunning()) console.pause();
+					else console.resume();
+				}, new KeyCombination(GLFW.GLFW_KEY_PAUSE)),
+				keybindStepIn = new KeybindEntry("Step Into", action -> {
+					if (action != GLFW.GLFW_PRESS && action != GLFW.GLFW_REPEAT) return;
 					if (console == null) return;
-					console.getInput().setGamepad(0, W4Input.BUTTON_DOWN, down);
-				}, new KeyCombination(GLFW.GLFW_KEY_S), new KeyCombination(GLFW.GLFW_KEY_DOWN)),
-				new KeybindEntry("Left", action -> {
-					boolean down = action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT;
+					console.step(DebugStepMode.IN);
+				}, new KeyCombination(GLFW.GLFW_KEY_F4)),
+				keybindStepNext = new KeybindEntry("Step Next", action -> {
+					if (action != GLFW.GLFW_PRESS && action != GLFW.GLFW_REPEAT) return;
 					if (console == null) return;
-					console.getInput().setGamepad(0, W4Input.BUTTON_LEFT, down);
-				}, new KeyCombination(GLFW.GLFW_KEY_A), new KeyCombination(GLFW.GLFW_KEY_LEFT)),
-				new KeybindEntry("Right", action -> {
-					boolean down = action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT;
+					console.step(DebugStepMode.NEXT);
+				}, new KeyCombination(GLFW.GLFW_KEY_F5)),
+				keybindStepOut = new KeybindEntry("Step Out", action -> {
+					if (action != GLFW.GLFW_PRESS && action != GLFW.GLFW_REPEAT) return;
 					if (console == null) return;
-					console.getInput().setGamepad(0, W4Input.BUTTON_RIGHT, down);
-				}, new KeyCombination(GLFW.GLFW_KEY_D), new KeyCombination(GLFW.GLFW_KEY_RIGHT)),
-				new KeybindEntry("Button 1", action -> {
-					boolean down = action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT;
-					if (console == null) return;
-					console.getInput().setGamepad(0, W4Input.BUTTON_1, down);
-				}, new KeyCombination(GLFW.GLFW_KEY_X)),
-				new KeybindEntry("Button 2", action -> {
-					boolean down = action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT;
-					if (console == null) return;
-					console.getInput().setGamepad(0, W4Input.BUTTON_2, down);
-				}, new KeyCombination(GLFW.GLFW_KEY_Z))))));
+					console.step(DebugStepMode.OUT);
+				}, new KeyCombination(GLFW.GLFW_KEY_F6))))));
 		inspector = new MachineInspector();
 		controller = new MachineController();
 
@@ -152,7 +166,7 @@ public class Main extends Application {
 
 			if (ImGui.beginMenu("Debugger")) {
 				if (ImGui.menuItem(
-					console != null && !console.isRunning() ? "Resume" : "Pause", "Break", false,
+					console != null && !console.isRunning() ? "Resume" : "Pause", keybindPause.getKeybindNames(), false,
 					console != null)) {
 					if (console.isRunning()) console.pause();
 					else console.resume();
@@ -160,9 +174,12 @@ public class Main extends Application {
 
 				ImGui.separator();
 
-				if (ImGui.menuItem("Step Into", "F4", false, console != null)) console.step(DebugStepMode.IN);
-				if (ImGui.menuItem("Step Next", "F5", false, console != null)) console.step(DebugStepMode.NEXT);
-				if (ImGui.menuItem("Step Out", "F6", false, console != null)) console.step(DebugStepMode.OUT);
+				if (ImGui.menuItem("Step Into", keybindStepIn.getKeybindNames(), false, console != null))
+					console.step(DebugStepMode.IN);
+				if (ImGui.menuItem("Step Next", keybindStepNext.getKeybindNames(), false, console != null))
+					console.step(DebugStepMode.NEXT);
+				if (ImGui.menuItem("Step Out", keybindStepOut.getKeybindNames(), false, console != null))
+					console.step(DebugStepMode.OUT);
 
 				ImGui.separator();
 				debuggerWindowMenu();

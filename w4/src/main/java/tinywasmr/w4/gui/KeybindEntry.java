@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class KeybindEntry implements Keybind {
 	private String name;
@@ -31,6 +32,10 @@ public class KeybindEntry implements Keybind {
 	}
 
 	public List<KeyCombination> getConfigured() { return configured; }
+
+	public String getKeybindNames() {
+		return getConfigured().stream().map(KeyCombination::toString).collect(Collectors.joining("/"));
+	}
 
 	public void reset() {
 		configured.clear();

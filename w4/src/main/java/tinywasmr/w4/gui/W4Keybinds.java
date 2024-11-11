@@ -36,6 +36,7 @@ public class W4Keybinds {
 			else configuringKeybind.getConfigured().set(configuringEntry, currentKey);
 			configuringKeybind = null;
 			configuringEntry = -1;
+			recalculate();
 		}
 	}
 
@@ -174,7 +175,50 @@ public class W4Keybinds {
 		case GLFW.GLFW_KEY_7 -> "7";
 		case GLFW.GLFW_KEY_8 -> "8";
 		case GLFW.GLFW_KEY_9 -> "9";
-		default -> "GLFW:%02x".formatted(key);
+		case GLFW.GLFW_KEY_F1 -> "F1";
+		case GLFW.GLFW_KEY_F2 -> "F2";
+		case GLFW.GLFW_KEY_F3 -> "F3";
+		case GLFW.GLFW_KEY_F4 -> "F4";
+		case GLFW.GLFW_KEY_F5 -> "F5";
+		case GLFW.GLFW_KEY_F6 -> "F6";
+		case GLFW.GLFW_KEY_F7 -> "F7";
+		case GLFW.GLFW_KEY_F8 -> "F8";
+		case GLFW.GLFW_KEY_F9 -> "F9";
+		case GLFW.GLFW_KEY_F10 -> "F10";
+		case GLFW.GLFW_KEY_F11 -> "F11";
+		case GLFW.GLFW_KEY_F12 -> "F12";
+		case GLFW.GLFW_KEY_A -> "A";
+		case GLFW.GLFW_KEY_B -> "B";
+		case GLFW.GLFW_KEY_C -> "C";
+		case GLFW.GLFW_KEY_D -> "D";
+		case GLFW.GLFW_KEY_E -> "E";
+		case GLFW.GLFW_KEY_F -> "F";
+		case GLFW.GLFW_KEY_G -> "G";
+		case GLFW.GLFW_KEY_H -> "H";
+		case GLFW.GLFW_KEY_I -> "I";
+		case GLFW.GLFW_KEY_J -> "J";
+		case GLFW.GLFW_KEY_K -> "K";
+		case GLFW.GLFW_KEY_L -> "L";
+		case GLFW.GLFW_KEY_M -> "M";
+		case GLFW.GLFW_KEY_N -> "N";
+		case GLFW.GLFW_KEY_O -> "O";
+		case GLFW.GLFW_KEY_P -> "P";
+		case GLFW.GLFW_KEY_Q -> "Q";
+		case GLFW.GLFW_KEY_R -> "R";
+		case GLFW.GLFW_KEY_S -> "S";
+		case GLFW.GLFW_KEY_T -> "T";
+		case GLFW.GLFW_KEY_U -> "U";
+		case GLFW.GLFW_KEY_V -> "V";
+		case GLFW.GLFW_KEY_W -> "W";
+		case GLFW.GLFW_KEY_X -> "X";
+		case GLFW.GLFW_KEY_Y -> "Y";
+		case GLFW.GLFW_KEY_Z -> "Z";
+		case GLFW.GLFW_KEY_UP -> "Up Arrow";
+		case GLFW.GLFW_KEY_DOWN -> "Down Arrow";
+		case GLFW.GLFW_KEY_LEFT -> "Left Arrow";
+		case GLFW.GLFW_KEY_RIGHT -> "Right Arrow";
+		case GLFW.GLFW_KEY_PAUSE -> "Pause";
+		default -> "[%02x]".formatted(key);
 		};
 	}
 
