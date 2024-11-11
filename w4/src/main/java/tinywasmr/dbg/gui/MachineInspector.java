@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import imgui.ImGui;
+import imgui.flag.ImGuiTreeNodeFlags;
 import tinywasmr.dbg.DebugInterface;
 import tinywasmr.dbg.DebugSymbols;
 import tinywasmr.dbg.ValueDisplayMode;
@@ -28,7 +29,7 @@ public class MachineInspector {
 
 		ImGui.separator();
 
-		if (ImGui.collapsingHeader("Overview")) {
+		if (ImGui.collapsingHeader("Overview", ImGuiTreeNodeFlags.DefaultOpen)) {
 			ImGui.indent();
 			overview(
 				debug != null ? debug.getMachine() : null,
@@ -59,12 +60,12 @@ public class MachineInspector {
 		String name;
 
 		if (frame instanceof ExternalFrame) name = "extern".formatted(frame.getOperandStack());
-		else if (frame instanceof FunctionFrame func) name = "  func %s"
+		else if (frame instanceof FunctionFrame func) name = "  func %s()"
 			.formatted(symbols.nameOf(func.getFunction().declaration()));
 		else if (frame instanceof BlockFrame) name = " block";
 		else name = "unknown";
 
-		if (ImGui.collapsingHeader("%03d: %s".formatted(id, name))) {
+		if (ImGui.treeNodeEx(id, ImGuiTreeNodeFlags.NoTreePushOnOpen, "%03d: %s".formatted(id, name))) {
 			ImGui.indent();
 
 			if (!(frame instanceof ExternalFrame)) {
