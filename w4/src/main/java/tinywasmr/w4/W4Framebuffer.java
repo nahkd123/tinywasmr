@@ -1,5 +1,8 @@
 package tinywasmr.w4;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.Arrays;
 
 /**
@@ -30,12 +33,27 @@ public class W4Framebuffer {
 	public static final int BLIT_ROTATE = 0b1000;
 
 	private byte[] memory;
+	private byte[] fontRom;
+
+	public W4Framebuffer(byte[] memory, byte[] fontRom) {
+		this.memory = memory;
+		this.fontRom = fontRom;
+	}
 
 	public W4Framebuffer(byte[] memory) {
 		this.memory = memory;
+
+		try (InputStream stream = getClass().getClassLoader().getResourceAsStream("w4font.bin")) {
+			if (stream == null) throw new RuntimeException("w4font.bin resource is missing");
+			this.fontRom = stream.readNBytes(1792);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 
 	public byte[] getMemory() { return memory; }
+
+	public byte[] getFontRom() { return fontRom; }
 
 	public void clear() {
 		Arrays.fill(memory, BASE, BASE + ((WIDTH * HEIGHT) >> 2), (byte) 0x00);

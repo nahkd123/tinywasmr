@@ -108,9 +108,22 @@ public class W4Environment {
 
 	@Export(exportAs = "text")
 	public void text(int address, int x, int y) {
-		// TODO implement text
-		// trace.accept("env::text(): not implemented");
-		trace.accept("env::text(\"%s\", %d, %d)".formatted(getNulTermAscii(address), x, y));
+		int xx = x;
+
+		for (int p = address; p < memory.length; p++) {
+			int ch = memory[p] & 0xff;
+			if (ch == 0) return;
+
+			if (ch == 10) {
+				y += 8;
+				xx = x;
+				continue;
+			}
+
+			if (ch >= 32 && ch <= 255)
+				framebuffer.blit(framebuffer.getFontRom(), 0, xx, y, 8, 8, 0, (ch - 32) << 3, 8, 0);
+			xx += 8;
+		}
 	}
 
 	@Export(exportAs = "tone")
