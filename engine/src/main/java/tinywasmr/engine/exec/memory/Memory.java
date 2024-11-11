@@ -142,22 +142,11 @@ public interface Memory extends Exportable {
 	}
 
 	default float readF32(int memoryOffset) {
-		byte[] bs = read(memoryOffset, 4);
-		int i = (bs[0] & 0xff) << 24 | (bs[1] & 0xff) << 16 | (bs[2] & 0xff) << 8 | bs[3] & 0xff;
-		return Float.intBitsToFloat(i);
+		return Float.intBitsToFloat(readI32(memoryOffset));
 	}
 
 	default double readF64(int memoryOffset) {
-		byte[] bs = read(memoryOffset, 8);
-		long l = (bs[0] & 0xffL) << 56L
-			| (bs[1] & 0xffL) << 48L
-			| (bs[2] & 0xffL) << 40L
-			| (bs[3] & 0xffL) << 32L
-			| (bs[4] & 0xffL) << 24L
-			| (bs[5] & 0xffL) << 16L
-			| (bs[6] & 0xffL) << 8L
-			| bs[7] & 0xffL;
-		return Double.longBitsToDouble(l);
+		return Double.longBitsToDouble(readI64(memoryOffset));
 	}
 
 	default void writeI8(int memoryOffset, int value) {
