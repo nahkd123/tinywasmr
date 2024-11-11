@@ -20,6 +20,7 @@ import imgui.flag.ImGuiConfigFlags;
 import imgui.flag.ImGuiWindowFlags;
 import tinywasmr.dbg.DebugStepMode;
 import tinywasmr.dbg.gui.AboutTinyWasmR;
+import tinywasmr.dbg.gui.CodeViewer;
 import tinywasmr.dbg.gui.MachineController;
 import tinywasmr.dbg.gui.MachineInspector;
 import tinywasmr.engine.module.WasmModule;
@@ -42,6 +43,7 @@ public class Main extends Application {
 
 	// Debugger
 	private MachineInspector inspector;
+	private CodeViewer codeViewer;
 	private MachineController controller;
 	private boolean showInspector = false;
 	private boolean showCodeViewer = false;
@@ -124,6 +126,7 @@ public class Main extends Application {
 					console.step(DebugStepMode.OUT);
 				}, new KeyCombination(GLFW.GLFW_KEY_F6))))));
 		inspector = new MachineInspector();
+		codeViewer = new CodeViewer();
 		controller = new MachineController();
 
 		GLFW.glfwSetKeyCallback(handle, (window, key, scancode, action, mods) -> {
@@ -254,7 +257,7 @@ public class Main extends Application {
 		}
 
 		if (showCodeViewer) {
-			if (ImGui.begin("Code Viewer")) inspector.codeViewer(console);
+			if (ImGui.begin("Code Viewer")) codeViewer.viewer(console, inspector.getSelectedFrame());
 			ImGui.end();
 		}
 
