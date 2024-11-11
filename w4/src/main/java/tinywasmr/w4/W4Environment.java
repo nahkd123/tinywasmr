@@ -101,15 +101,13 @@ public class W4Environment {
 	}
 
 	@Export(exportAs = "line")
-	public void line(int x, int y, int width, int height) {
-		// TODO implement line
-		trace.accept("env::line(): not implemented");
+	public void line(int x1, int y1, int x2, int y2) {
+		framebuffer.line(x1, y1, x2, y2);
 	}
 
 	@Export(exportAs = "oval")
 	public void oval(int x, int y, int width, int height) {
-		// TODO implement oval
-		trace.accept("env::oval(): not implemented");
+		framebuffer.oval(x, y, width, height);
 	}
 
 	@Export(exportAs = "rect")
@@ -138,9 +136,20 @@ public class W4Environment {
 	}
 
 	@Export(exportAs = "tone")
-	public void tone(int freq, int duration, int volume, int flags) {
+	public void tone(int frequency, int duration, int volume, int flags) {
+		// int freq1 = frequency & 0xffff;
+		// int freq2 = (frequency >> 16) & 0xffff;
+		// int sustain = (duration & 0xff);
+		// int release = ((duration >> 8) & 0xff);
+		// int decay = ((duration >> 16) & 0xff);
+		// int attack = ((duration >> 24) & 0xff);
+		// int sustainVolume = Math.min(volume & 0xff, 100);
+		// int peakVolume = Math.min((volume >> 8) & 0xff, 100);
+		// int channelIdx = flags & 0x3;
+		// int mode = (flags >> 2) & 0x3;
+		// int pan = (flags >> 4) & 0x3;
+		// int noteMode = flags & 0x40;
 		// TODO implement tone
-		trace.accept("env::tone(): not implemented");
 	}
 
 	@Export(exportAs = "trace")

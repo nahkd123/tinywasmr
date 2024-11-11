@@ -113,6 +113,16 @@ public class W4Framebuffer {
 		for (int xx = startX; xx < endX; xx++) drawPoint(color, xx, y);
 	}
 
+	public void drawVLine(int x, int y, int len) {
+		if (y + len <= 0 || x < 0 || x >= WIDTH) return;
+		int dc0 = getDrawColor() & 0xf;
+		if (dc0 == 0) return;
+		int startY = Math.max(0, y);
+		int endY = Math.min(HEIGHT, y + len);
+		int strokeColor = (dc0 - 1) & 0x3;
+		for (int yy = startY; yy < endY; yy++) drawPoint(strokeColor, x, yy);
+	}
+
 	public void rect(int x, int y, int width, int height) {
 		int startX = Math.max(0, x);
 		int startY = Math.max(0, y);
@@ -183,6 +193,118 @@ public class W4Framebuffer {
 
 				int dc = (colors >> (colorIdx << 2)) & 0x0f;
 				if (dc != 0) drawPoint((dc - 1) & 0x03, tx, ty);
+			}
+		}
+	}
+
+	public void drawPointUnclipped(int color, int x, int y) {
+		if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) drawPoint(color, x, y);
+	}
+
+	public void drawHLineUnclipped(int color, int startX, int y, int endX) {
+		if (y >= 0 && y < HEIGHT) {
+			if (startX < 0) startX = 0;
+			if (endX > WIDTH) endX = WIDTH;
+			if (startX < endX) drawHLine(color, startX, y, endX);
+		}
+	}
+
+	public void oval(int x, int y, int width, int height) {
+		int dc01 = getDrawColor();
+		int dc0 = dc01 & 0xf;
+		int dc1 = (dc01 >> 4) & 0xf;
+		if (dc1 == 0xf) return;
+		int strokeColor = (dc1 - 1) & 0x3;
+		int fillColor = (dc0 - 1) & 0x3;
+		int a = width - 1;
+		int b = height - 1;
+		int b1 = b % 2;
+		int north = y + height / 2;
+		int west = x;
+		int east = x + width - 1;
+		int south = north - b1;
+		int a2 = a * a;
+		int b2 = b * b;
+		int dx = 4 * (1 - a) * b2;
+		int dy = 4 * (b1 + 1) * a2;
+		int err = dx + dy + b1 * a2;
+		a = 8 * a2;
+		b1 = 8 * b2;
+
+		do {
+			drawPointUnclipped(strokeColor, east, north);
+			drawPointUnclipped(strokeColor, west, north);
+			drawPointUnclipped(strokeColor, west, south);
+			drawPointUnclipped(strokeColor, east, south);
+
+			int start = west + 1;
+			int len = east - start;
+
+			if (dc0 != 0 && len > 0) {
+				drawHLineUnclipped(fillColor, start, north, east);
+				drawHLineUnclipped(fillColor, start, south, east);
+			}
+
+			int err2 = 2 * err;
+
+			if (err2 <= dy) {
+				north += 1;
+				south -= 1;
+				dy += a;
+				err += dy;
+			}
+
+			if (err2 >= dx || err2 > dy) {
+				west += 1;
+				east -= 1;
+				dx += b1;
+				err += dx;
+			}
+		} while (west <= east);
+
+		while (north - south < height) {
+			drawPointUnclipped(strokeColor, west - 1, north);
+			drawPointUnclipped(strokeColor, east + 1, north);
+			north += 1;
+			drawPointUnclipped(strokeColor, west - 1, south);
+			drawPointUnclipped(strokeColor, east + 1, south);
+			south -= 1;
+		}
+	}
+
+	public void line(int x1, int y1, int x2, int y2) {
+		int dc0 = getDrawColor() & 0xf;
+		if (dc0 == 0) return;
+		int strokeColor = (dc0 - 1) & 0x3;
+
+		if (y1 > y2) {
+			int swap = x1;
+			x1 = x2;
+			x2 = swap;
+
+			swap = y1;
+			y1 = y2;
+			y2 = swap;
+		}
+
+		int dx = Math.abs(x2 - x1), sx = x1 < x2 ? 1 : -1;
+		int dy = y2 - y1;
+		int err = (dx > dy ? dx : -dy) / 2, e2;
+
+		while (true) {
+			drawPointUnclipped(strokeColor, x1, y1);
+			if (x1 == x2 && y1 == y2) break;
+
+			e2 = err;
+
+			if (e2 > -dx) {
+				err -= dy;
+				x1 += sx;
+			}
+
+			if (e2 < dy) {
+				err += dx;
+				y1++;
 			}
 		}
 	}
