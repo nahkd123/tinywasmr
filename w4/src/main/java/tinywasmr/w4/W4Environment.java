@@ -15,14 +15,15 @@ import tinywasmr.extern.annotation.Export;
  */
 // https://github.com/aduros/wasm4/blob/main/runtimes/native/src/framebuffer.c
 public class W4Environment {
-	// Addresses
-	public static final int GAMEPAD_ADDRESS = 0x0016;
-	public static final int MOUSE_ADDRESS = 0x001A;
+	public static final int SYSTEM_FLAGS_ADDR = 0x001F;
+	public static final int SYSTEM_PRESERVE_FB = 0b00000001;
+	public static final int SYSTEM_HIDE_GAMEPAD_OVERLAY = 0b00000010;
 
 	// Environment access
 	private W4DiskAccess disk;
 	private Consumer<String> trace;
 	private W4Framebuffer framebuffer;
+	private W4Input input;
 
 	@Export(exportAs = "memory")
 	private byte[] memory = new byte[Memory.PAGE_SIZE];
@@ -31,6 +32,7 @@ public class W4Environment {
 		this.disk = disk;
 		this.trace = trace != null ? trace : s -> {};
 		this.framebuffer = new W4Framebuffer(memory);
+		this.input = new W4Input(memory);
 	}
 
 	/**
@@ -47,6 +49,15 @@ public class W4Environment {
 	 * </p>
 	 */
 	public W4Framebuffer getFramebuffer() { return framebuffer; }
+
+	/**
+	 * <p>
+	 * Get the input manager for controlling the game.
+	 * </p>
+	 */
+	public W4Input getInput() { return input; }
+
+	public int getSystemFlags() { return memory[SYSTEM_FLAGS_ADDR] & 0xff; }
 
 	public String getNulTermAscii(int address) {
 		int len = 0;

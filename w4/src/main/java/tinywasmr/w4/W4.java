@@ -67,6 +67,10 @@ public class W4 implements DebugInterface {
 
 	public Instance getCart() { return cart; }
 
+	public W4Framebuffer getFramebuffer() { return env.object().getFramebuffer(); }
+
+	public W4Input getInput() { return env.object().getInput(); }
+
 	@Override
 	public DebugSymbols getSymbols() { return symbols; }
 
@@ -182,6 +186,7 @@ public class W4 implements DebugInterface {
 			state = W4ConsoleState.UPDATE;
 			return StepResult.NORMAL;
 		case UPDATE:
+			if ((env.object().getSystemFlags() & W4Environment.SYSTEM_PRESERVE_FB) == 0) getFramebuffer().clear();
 			machine.call(cart.export("update").asFunction(), new Value[0]);
 			return StepResult.NORMAL;
 		default:
