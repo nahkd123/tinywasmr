@@ -77,6 +77,7 @@ public class BinaryModuleParser {
 	private BinaryFunctionBody[] code;
 	private BinaryDataSegment[] data;
 	private BinaryElementSegment[] elements;
+	private int start;
 	private Map<Integer, List<byte[]>> unknowns;
 
 	/**
@@ -134,6 +135,7 @@ public class BinaryModuleParser {
 		code = new BinaryFunctionBody[0];
 		data = new BinaryDataSegment[0];
 		elements = new BinaryElementSegment[0];
+		start = -1;
 		unknowns = new HashMap<>();
 	}
 
@@ -182,7 +184,7 @@ public class BinaryModuleParser {
 		case 0x05: memories = SectionParser.parseMemorySection(header.size(), stream); break;
 		case 0x06: globals = SectionParser.parseGlobalSection(header.size(), stream); break;
 		case 0x07: exports = SectionParser.parseExportSection(header.size(), stream); break;
-		case 0x08: throw new RuntimeException("0x08 start section not implemented");
+		case 0x08: start = StreamReader.readUint32Var(stream); break;
 		case 0x09: elements = SectionParser.parseElementSection(header.size(), stream); break;
 		case 0x0A: code = SectionParser.parseCodeSection(header.size(), stream); break;
 		case 0x0B: data = SectionParser.parseDataSection(header.size(), stream); break;
@@ -312,6 +314,7 @@ public class BinaryModuleParser {
 		module.declaredGlobals().addAll(globals);
 		module.declaredFunctions().addAll(functions);
 		module.declaredExports().addAll(exports);
+		if (start != -1) module.setStart(functions.get(start));
 		return module;
 	}
 

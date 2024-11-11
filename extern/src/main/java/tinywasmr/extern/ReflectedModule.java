@@ -123,4 +123,9 @@ public class ReflectedModule<T> implements WasmModule {
 	public List<FunctionDecl> declaredFunctions() {
 		return functions;
 	}
+
+	@Override
+	public FunctionDecl startFunction() {
+		return null;
+	}
 }

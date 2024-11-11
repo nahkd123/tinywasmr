@@ -31,6 +31,8 @@ public interface WasmModule {
 
 	List<FunctionDecl> declaredFunctions();
 
+	FunctionDecl startFunction();
+
 	default InitializerFunctionDecl initFunction() {
 		return new InitializerFunctionDecl(this);
 	}

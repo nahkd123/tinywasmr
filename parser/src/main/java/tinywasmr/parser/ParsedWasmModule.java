@@ -25,6 +25,7 @@ public class ParsedWasmModule implements WasmModule {
 	private List<MemoryDecl> memories = new ArrayList<>();
 	private List<GlobalDecl> globals = new ArrayList<>();
 	private List<FunctionDecl> functions = new ArrayList<>();
+	private FunctionDecl start = null;
 	private InitializerFunctionDecl initializer = null;
 
 	@Override
@@ -71,6 +72,13 @@ public class ParsedWasmModule implements WasmModule {
 	public List<FunctionDecl> declaredFunctions() {
 		return functions;
 	}
+
+	@Override
+	public FunctionDecl startFunction() {
+		return start;
+	}
+
+	public void setStart(FunctionDecl start) { this.start = start; }
 
 	@Override
 	public InitializerFunctionDecl initFunction() {

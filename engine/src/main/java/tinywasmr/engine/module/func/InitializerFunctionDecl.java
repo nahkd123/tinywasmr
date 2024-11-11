@@ -6,6 +6,7 @@ import java.util.List;
 import tinywasmr.engine.exec.value.NumberI32Value;
 import tinywasmr.engine.insn.ConstInsn;
 import tinywasmr.engine.insn.control.BlockInsn;
+import tinywasmr.engine.insn.control.CallInsn;
 import tinywasmr.engine.insn.memory.MemoryInitInsn;
 import tinywasmr.engine.insn.table.TableInitInsn;
 import tinywasmr.engine.insn.variable.GlobalInsn;
@@ -49,5 +50,7 @@ public class InitializerFunctionDecl extends ModuleFunctionDecl {
 			body().add(new BlockInsn(decl.type().valType(), decl.init()));
 			body().add(new GlobalInsn(GlobalInsnType.SET, decl));
 		}
+
+		if (module.startFunction() != null) body().add(new CallInsn(module.startFunction()));
 	}
 }
