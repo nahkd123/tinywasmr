@@ -68,6 +68,14 @@ public class W4Framebuffer {
 		return val;
 	}
 
+	public void setPaletteRGB(int index, int rgb) {
+		int addr = PALETTE + index * 4;
+		memory[addr + 0] = (byte) (rgb & 0x000000ff);
+		memory[addr + 1] = (byte) ((rgb & 0x0000ff00) >> 8);
+		memory[addr + 2] = (byte) ((rgb & 0x00ff0000) >> 16);
+		memory[addr + 3] = (byte) ((rgb & 0xff000000) >> 24);
+	}
+
 	/**
 	 * <p>
 	 * Get the color palette in BGR format, with color data stored in least

@@ -53,7 +53,16 @@ public class W4 implements DebugInterface {
 	public static W4 create(Machine machine, Executor executor, WasmModule module, W4DiskAccess disk, Consumer<String> tracer) {
 		ReflectedInstance<W4Environment> env = ENV_MODULE.instanceOf(new W4Environment(disk, tracer));
 		DefaultInstance cart = new DefaultInstance(module, SimpleImporter.builder().module("env", env).build());
-		return new W4(machine, executor, env, cart, W4ConsoleState.INIT);
+		W4 w4 = new W4(machine, executor, env, cart, W4ConsoleState.INIT);
+		w4.getFramebuffer().setPaletteRGB(0, 0xe0f8cf);
+		w4.getFramebuffer().setPaletteRGB(1, 0x86c06c);
+		w4.getFramebuffer().setPaletteRGB(2, 0x306850);
+		w4.getFramebuffer().setPaletteRGB(3, 0x071821);
+		w4.env.object().getMemory()[W4Framebuffer.DRAW_COLORS + 0] = 0x03;
+		w4.env.object().getMemory()[W4Framebuffer.DRAW_COLORS + 1] = 0x12;
+		w4.getInput().setMouseX(0x7fff);
+		w4.getInput().setMouseY(0x7fff);
+		return w4;
 	}
 
 	public static W4 create(WasmModule module, W4DiskAccess disk, Consumer<String> tracer) {
