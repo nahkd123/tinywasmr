@@ -184,6 +184,10 @@ public enum NumericBinaryOpInsn implements Instruction {
 		boolean apply(double bottom, double top);
 	}
 
+	public Value apply(Value a, Value b) {
+		return operator.apply(a, b);
+	}
+
 	@Override
 	public void execute(Machine vm) {
 		Value top = vm.peekFrame().popOprand();
