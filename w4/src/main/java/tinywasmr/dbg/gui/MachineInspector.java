@@ -97,6 +97,9 @@ public class MachineInspector {
 					//
 				}
 
+				ImGui.sameLine();
+				ImGui.text("Step %d".formatted(frame.getStep()));
+
 				// int currStep = frame.getInsnIndex();
 				// int maxStep = frame.getExecutingInsns().size();
 				// ImGui.sameLine();

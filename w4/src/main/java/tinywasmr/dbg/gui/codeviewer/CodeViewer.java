@@ -89,7 +89,7 @@ public class CodeViewer {
 
 		if (scope.size() > 0) {
 			Instruction insn = scope.get(scope.size() - 1);
-			instruction(insn, symbols, debug);
+			instruction(insn, symbols, debug, 0);
 		} else if (function != null) {
 			if (function instanceof ImportFunctionDecl importFunction) {
 				ImGui.text("This function is imported from %s::%s.".formatted(
@@ -98,7 +98,7 @@ public class CodeViewer {
 			} else if (function instanceof ModuleFunctionDecl moduleFunction) {
 				for (int i = 0; i < moduleFunction.body().size(); i++) {
 					ImGui.pushID(i);
-					instruction(moduleFunction.body().get(i), symbols, debug);
+					instruction(moduleFunction.body().get(i), symbols, debug, i);
 					ImGui.popID();
 				}
 			} else if (function instanceof ExternalFunctionDecl) {
@@ -204,21 +204,21 @@ public class CodeViewer {
 		return false;
 	}
 
-	public void instruction(Instruction insn, DebugSymbols symbols, DebugInterface debug) {
+	public void instruction(Instruction insn, DebugSymbols symbols, DebugInterface debug, int stepIndex) {
 		ImGui.beginGroup();
 		// char insnPointerChar = isExecutingInstruction(insn, debug) ? '>' : ' ';
-		char insnPointerChar = ' ';
+		String prefix = "%03d".formatted(stepIndex);
 
 		if (insn instanceof LoadInsn load) {
-			ImGui.text("%s %s".formatted(insnPointerChar, loadInsnTypeName(load)));
+			ImGui.text("%s %s".formatted(prefix, loadInsnTypeName(load)));
 			ImGui.sameLine();
 			ImGui.smallButton("$%s".formatted(symbols.nameOf(load.memory())));
 		} else if (insn instanceof StoreInsn store) {
-			ImGui.text("%s %s".formatted(insnPointerChar, storeInsnTypeName(store)));
+			ImGui.text("%s %s".formatted(prefix, storeInsnTypeName(store)));
 			ImGui.sameLine();
 			ImGui.smallButton("$%s".formatted(symbols.nameOf(store.memory())));
 		} else if (insn instanceof BlockInsn block) {
-			ImGui.text("%s block {".formatted(insnPointerChar));
+			ImGui.text("%s block {".formatted(prefix));
 
 			if (scope.size() == 0 || scope.get(scope.size() - 1) != insn) {
 				ImGui.sameLine();
@@ -229,14 +229,14 @@ public class CodeViewer {
 
 			for (int i = 0; i < block.instructions().size(); i++) {
 				ImGui.pushID(i);
-				instruction(block.instructions().get(i), symbols, debug);
+				instruction(block.instructions().get(i), symbols, debug, i);
 				ImGui.popID();
 			}
 
 			ImGui.unindent();
-			ImGui.text("  }");
+			ImGui.text("}");
 		} else if (insn instanceof LoopInsn block) {
-			ImGui.text("%s loop {".formatted(insnPointerChar));
+			ImGui.text("%s loop {".formatted(prefix));
 
 			if (scope.size() == 0 || scope.get(scope.size() - 1) != insn) {
 				ImGui.sameLine();
@@ -247,14 +247,14 @@ public class CodeViewer {
 
 			for (int i = 0; i < block.instructions().size(); i++) {
 				ImGui.pushID(i);
-				instruction(block.instructions().get(i), symbols, debug);
+				instruction(block.instructions().get(i), symbols, debug, i);
 				ImGui.popID();
 			}
 
 			ImGui.unindent();
-			ImGui.text("  }");
+			ImGui.text("}");
 		} else if (insn instanceof IfInsn block) {
-			ImGui.text("%s if {".formatted(insnPointerChar));
+			ImGui.text("%s if {".formatted(prefix));
 
 			if (scope.size() == 0 || scope.get(scope.size() - 1) != insn) {
 				ImGui.sameLine();
@@ -265,28 +265,28 @@ public class CodeViewer {
 
 			for (int i = 0; i < block.truePath().size(); i++) {
 				ImGui.pushID(i);
-				instruction(block.truePath().get(i), symbols, debug);
+				instruction(block.truePath().get(i), symbols, debug, i);
 				ImGui.popID();
 			}
 
 			ImGui.unindent();
 			if (block.falsePath().size() == 0) {
-				ImGui.text("  }");
+				ImGui.text("}");
 			} else {
-				ImGui.text("  } else {");
+				ImGui.text("} else {");
 				ImGui.indent();
 
 				for (int i = 0; i < block.falsePath().size(); i++) {
 					ImGui.pushID(i);
-					instruction(block.falsePath().get(i), symbols, debug);
+					instruction(block.falsePath().get(i), symbols, debug, i);
 					ImGui.popID();
 				}
 
 				ImGui.unindent();
-				ImGui.text("  }");
+				ImGui.text("}");
 			}
 		} else {
-			ImGui.text("%s %s".formatted(insnPointerChar, nameOf(insn, symbols)));
+			ImGui.text("%s %s".formatted(prefix, nameOf(insn, symbols)));
 		}
 
 		ImGui.endGroup();
@@ -305,7 +305,7 @@ public class CodeViewer {
 		return "%s(%s): %s".formatted(name, params, results);
 	}
 
-	public String nameOf(Instruction insn, DebugSymbols symbols) {
+	public static String nameOf(Instruction insn, DebugSymbols symbols) {
 		if (insn instanceof ConstInsn constant) {
 			if (constant.value() instanceof NumberI32Value i32) return "i32.const %d".formatted(i32.i32());
 			if (constant.value() instanceof NumberI64Value i64) return "i64.const %d".formatted(i64.i64());
@@ -358,7 +358,7 @@ public class CodeViewer {
 		return insn.toString();
 	}
 
-	private String storeInsnTypeName(StoreInsn store) {
+	private static String storeInsnTypeName(StoreInsn store) {
 		return switch (store.type()) {
 		case I32 -> "i32.store";
 		case I64 -> "i64.store";
@@ -373,7 +373,7 @@ public class CodeViewer {
 		};
 	}
 
-	private String loadInsnTypeName(LoadInsn load) {
+	private static String loadInsnTypeName(LoadInsn load) {
 		return switch (load.type()) {
 		case I32 -> "i32.load";
 		case I64 -> "i64.load";
