@@ -9,7 +9,7 @@ public record LoadInsn(MemoryDecl memory, LoadType type, MemoryArg memarg) imple
 	@Override
 	public void execute(Machine vm) {
 		int address = vm.peekFrame().popOprand().i32();
-		Memory memory = vm.peekFunctionFrame().getInstance().memory(this.memory);
+		Memory memory = vm.peekInstancedFrame().getInstance().memory(this.memory);
 		vm.peekFrame().pushOperand(type.execute(memory, address));
 	}
 }

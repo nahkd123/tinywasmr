@@ -42,7 +42,6 @@ public class DefaultInstance implements Instance {
 	private Map<MemoryDecl, Memory> declToMemory;
 	private Map<GlobalDecl, Global> declToGlobal;
 	private Map<String, Export> exports;
-	private Function initFunction;
 
 	public DefaultInstance(WasmModule module, Importer importer) {
 		this.module = module;
@@ -56,7 +55,6 @@ public class DefaultInstance implements Instance {
 		this.declToGlobal = new HashMap<>();
 		this.exports = new HashMap<>();
 		setup(importer);
-		this.initFunction = new Function(this, module.initFunction());
 	}
 
 	private void setup(Importer importer) {
@@ -184,11 +182,6 @@ public class DefaultInstance implements Instance {
 	@Override
 	public WasmModule module() {
 		return module;
-	}
-
-	@Override
-	public Function initFunction() {
-		return initFunction;
 	}
 
 	@Override

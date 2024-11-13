@@ -103,7 +103,7 @@ class BinaryModuleParserTest {
 	void testData() {
 		ParsedWasmModule module = load("binary/007_data.wasm");
 		Instance instance = new DefaultInstance(module, null);
-		instance.initFunction().exec();
+		instance.initialize();
 		instance.export("main").asFunction().exec();
 		assertArrayEquals(
 			"world".getBytes(StandardCharsets.US_ASCII),
@@ -117,7 +117,7 @@ class BinaryModuleParserTest {
 	void testGlobal() {
 		ParsedWasmModule module = load("binary/008_global.wasm");
 		Instance instance = new DefaultInstance(module, null);
-		instance.initFunction().exec();
+		instance.initialize();
 		assertEquals(42, instance.export("answer").asGlobal().get().i32());
 		instance.export("answer").asGlobal().set(new NumberI32Value(420));
 		assertEquals(420, instance.export("main").asFunction().exec());

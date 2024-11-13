@@ -13,7 +13,7 @@ import tinywasmr.engine.type.value.ValueType;
 public record CallInsn(FunctionDecl function) implements Instruction {
 	@Override
 	public void execute(Machine vm) {
-		Function function = vm.peekFunctionFrame().getInstance().function(this.function);
+		Function function = vm.peekInstancedFrame().getInstance().function(this.function);
 		callFunction(vm, function);
 	}
 

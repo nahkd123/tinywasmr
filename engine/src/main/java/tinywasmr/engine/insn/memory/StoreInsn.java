@@ -11,7 +11,7 @@ public record StoreInsn(MemoryDecl memory, StoreType type, MemoryArg memarg) imp
 	public void execute(Machine vm) {
 		Value val = vm.peekFrame().popOprand();
 		int address = vm.peekFrame().popOprand().i32();
-		Memory memory = vm.peekFunctionFrame().getInstance().memory(this.memory);
+		Memory memory = vm.peekInstancedFrame().getInstance().memory(this.memory);
 		type.execute(memory, address, val);
 	}
 }

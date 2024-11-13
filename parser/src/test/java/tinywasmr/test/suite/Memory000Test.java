@@ -27,7 +27,7 @@ class Memory000Test {
 
 	Instance instance() {
 		DefaultInstance i = new DefaultInstance(load(file), null);
-		i.initFunction().exec();
+		i.initialize();
 		return i;
 	}
 

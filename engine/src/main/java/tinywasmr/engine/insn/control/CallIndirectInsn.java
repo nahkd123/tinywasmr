@@ -14,7 +14,7 @@ import tinywasmr.engine.type.FunctionType;
 public record CallIndirectInsn(FunctionType type, TableDecl table) implements Instruction {
 	@Override
 	public void execute(Machine vm) {
-		Table table = vm.peekFunctionFrame().getInstance().table(this.table);
+		Table table = vm.peekInstancedFrame().getInstance().table(this.table);
 		Value index = vm.peekFrame().popOprand();
 		RefValue ref = table.get(index.i32());
 		if (!(ref instanceof FuncRefValue funcRef))

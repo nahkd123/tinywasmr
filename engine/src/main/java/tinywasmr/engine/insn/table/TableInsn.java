@@ -8,7 +8,7 @@ import tinywasmr.engine.module.table.TableDecl;
 public record TableInsn(TableInsnType type, TableDecl table) implements Instruction {
 	@Override
 	public void execute(Machine vm) {
-		Table table = vm.peekFunctionFrame().getInstance().table(this.table);
+		Table table = vm.peekInstancedFrame().getInstance().table(this.table);
 		type.execute(vm, table);
 	}
 }

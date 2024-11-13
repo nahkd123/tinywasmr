@@ -9,6 +9,7 @@ import tinywasmr.dbg.DebugSymbols;
 import tinywasmr.engine.exec.StepResult;
 import tinywasmr.engine.exec.executor.DefaultExecutor;
 import tinywasmr.engine.exec.executor.Executor;
+import tinywasmr.engine.exec.frame.init.InitFrame;
 import tinywasmr.engine.exec.instance.DefaultInstance;
 import tinywasmr.engine.exec.instance.Export;
 import tinywasmr.engine.exec.instance.Instance;
@@ -192,7 +193,7 @@ public class W4 implements DebugInterface {
 	private StepResult stepInHost() {
 		switch (state) {
 		case INIT:
-			machine.call(cart.initFunction(), new Value[0]);
+			machine.pushFrame(new InitFrame(cart));
 			state = W4ConsoleState.START;
 			return StepResult.NORMAL;
 		case START: {

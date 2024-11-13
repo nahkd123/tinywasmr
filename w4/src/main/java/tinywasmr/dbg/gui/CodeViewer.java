@@ -1,11 +1,8 @@
 package tinywasmr.dbg.gui;
 
-import java.util.List;
-
 import imgui.ImGui;
 import tinywasmr.dbg.DebugInterface;
 import tinywasmr.dbg.DebugSymbols;
-import tinywasmr.engine.exec.frame.Frame;
 import tinywasmr.engine.exec.value.NumberF32Value;
 import tinywasmr.engine.exec.value.NumberF64Value;
 import tinywasmr.engine.exec.value.NumberI32Value;
@@ -27,25 +24,13 @@ import tinywasmr.engine.insn.variable.LocalInsn;
 public class CodeViewer {
 	public CodeViewer() {}
 
-	public void viewer(DebugInterface debug, Frame frame) {
+	public void viewer(DebugInterface debug) {
 		if (debug == null) {
 			ImGui.text("Waiting for debugger...");
 			return;
 		}
 
-		if (frame == null) {
-			ImGui.text("No frame selected. Select a frame in Machine Insepctor.");
-			return;
-		}
-
-		List<Instruction> insns = frame.getExecutingInsns();
-		int currentFrameIndex = debug.getMachine().getFrameStack().indexOf(frame);
-
-		for (int i = 0; i < insns.size(); i++) {
-			boolean isCurrent = frame.getInsnIndex() == i; // TODO: block
-			Instruction insn = insns.get(i);
-			instruction(insn, isCurrent, debug.getSymbols());
-		}
+		// TODO
 	}
 
 	public void instruction(Instruction insn, boolean current, DebugSymbols symbols) {

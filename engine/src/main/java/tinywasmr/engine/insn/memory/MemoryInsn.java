@@ -8,7 +8,7 @@ import tinywasmr.engine.module.memory.MemoryDecl;
 public record MemoryInsn(MemoryInsnType type, MemoryDecl memory) implements Instruction {
 	@Override
 	public void execute(Machine vm) {
-		Memory memory = vm.peekFunctionFrame().getInstance().memory(this.memory);
+		Memory memory = vm.peekInstancedFrame().getInstance().memory(this.memory);
 		type.execute(vm, memory);
 	}
 }

@@ -12,7 +12,11 @@ public record MemoryInitInsn(DataSegment segment, MemoryDecl memory) implements 
 		int count = vm.peekFrame().popOprand().i32();
 		int dataOffset = vm.peekFrame().popOprand().i32();
 		int memOffset = vm.peekFrame().popOprand().i32();
-		Memory memory = vm.peekFunctionFrame().getInstance().memory(this.memory);
+		execute(vm, segment, dataOffset, memory, memOffset, count);
+	}
+
+	public static void execute(Machine vm, DataSegment segment, int dataOffset, MemoryDecl memoryDecl, int memOffset, int count) {
+		Memory memory = vm.peekInstancedFrame().getInstance().memory(memoryDecl);
 		memory.write(memOffset, segment.data(), dataOffset, count);
 	}
 }

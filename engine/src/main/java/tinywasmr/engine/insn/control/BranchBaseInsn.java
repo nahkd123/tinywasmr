@@ -2,10 +2,10 @@ package tinywasmr.engine.insn.control;
 
 import java.util.List;
 
-import tinywasmr.engine.exec.ValidationException;
 import tinywasmr.engine.exec.frame.BlockFrame;
 import tinywasmr.engine.exec.frame.Frame;
-import tinywasmr.engine.exec.frame.FunctionFrame;
+import tinywasmr.engine.exec.frame.IfFrame;
+import tinywasmr.engine.exec.frame.LoopFrame;
 import tinywasmr.engine.exec.value.Value;
 import tinywasmr.engine.exec.vm.Machine;
 import tinywasmr.engine.insn.Instruction;
@@ -20,40 +20,39 @@ public interface BranchBaseInsn extends Instruction {
 	 */
 	int nestIndex();
 
-	static void execute(Machine vm, int index) {
-		FunctionFrame funcFrame = vm.peekFunctionFrame();
-		Frame targetFrame = vm.getFrameStack().get(vm.getFrameStack().size() - index - 1);
-
-		if (targetFrame instanceof BlockFrame blockFrame && blockFrame.getBlock() instanceof LoopInsn loopInsn) {
-			// br act like continue statement
-			for (int i = 0; i <= index; i++) {
-				Frame frame = vm.popFrame();
-				if (frame == targetFrame) break;
-				if (frame == funcFrame) break; // can't pop past function frame
+	static int countBlockDepth(Machine vm) {
+		for (int i = vm.getFrameStack().size() - 1; i >= 0; i--) {
+			if (!(vm.getFrameStack().get(i) instanceof BlockFrame ||
+				vm.getFrameStack().get(i) instanceof IfFrame ||
+				vm.getFrameStack().get(i) instanceof LoopFrame)) {
+				return vm.getFrameStack().size() - i;
 			}
+		}
 
-			loopInsn.execute(vm);
-		} else {
-			// br exit the block
+		throw new IllegalStateException("Unable to count depth; no external frame?");
+	}
+
+	static void execute(Machine vm, int index) {
+		int depth = countBlockDepth(vm);
+		if (index >= depth) throw new IllegalArgumentException("Illegal br label: %d".formatted(index));
+
+		Frame targetFrame = vm.getFrameStack().get(vm.getFrameStack().size() - index - 1);
+		targetFrame.branchThis();
+
+		if (targetFrame.isFrameFinished()) {
 			List<ValueType> resultTypes = targetFrame.getBranchResultTypes().blockResults();
 			Value[] results = new Value[resultTypes.size()];
 
 			for (int i = results.length - 1; i >= 0; i--) {
 				Value val = vm.peekFrame().popOprand();
-				if (vm.hasRuntimeValidation() && !val.type().equals(resultTypes.get(i)))
-					throw new ValidationException("Type mismatch: %s (stack) != %s (block)"
-						.formatted(val.type(), resultTypes.get(i)));
+				// TODO validation
 				results[i] = val;
 			}
 
-			for (int i = 0; i <= index; i++) {
-				Frame frame = vm.popFrame();
-				if (frame == targetFrame) break;
-				if (frame == funcFrame) break; // can't pop past function frame
-			}
-
-			for (Value val : results) vm.peekFrame().pushOperand(val);
+			for (Value val : results) targetFrame.pushOperand(val);
 		}
+
+		while (vm.peekFrame() != targetFrame) vm.popFrame();
 	}
 
 	/**

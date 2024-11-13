@@ -3,9 +3,15 @@ package tinywasmr.engine.exec.instance;
 import java.util.Collection;
 import java.util.List;
 
+import tinywasmr.engine.exec.executor.DefaultExecutor;
+import tinywasmr.engine.exec.executor.Executor;
+import tinywasmr.engine.exec.frame.Frame;
+import tinywasmr.engine.exec.frame.init.InitFrame;
 import tinywasmr.engine.exec.global.Global;
 import tinywasmr.engine.exec.memory.Memory;
 import tinywasmr.engine.exec.table.Table;
+import tinywasmr.engine.exec.vm.DefaultMachine;
+import tinywasmr.engine.exec.vm.Machine;
 import tinywasmr.engine.module.CustomSection;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.func.FunctionDecl;
@@ -29,8 +35,14 @@ public interface Instance {
 	 */
 	WasmModule module();
 
-	default Function initFunction() {
-		return new Function(this, module().initFunction());
+	default void initialize(Machine vm, Executor executor) {
+		Frame parent = vm.peekFrame();
+		vm.pushFrame(new InitFrame(this));
+		do executor.step(vm); while (vm.peekFrame() != parent);
+	}
+
+	default void initialize() {
+		initialize(new DefaultMachine(), new DefaultExecutor());
 	}
 
 	/**

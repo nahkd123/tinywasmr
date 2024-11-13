@@ -5,7 +5,9 @@ import java.util.List;
 import tinywasmr.engine.exec.frame.ExternalFrame;
 import tinywasmr.engine.exec.frame.Frame;
 import tinywasmr.engine.exec.frame.FunctionFrame;
+import tinywasmr.engine.exec.frame.InstancedFrame;
 import tinywasmr.engine.exec.instance.Function;
+import tinywasmr.engine.exec.trap.ExternalTrap;
 import tinywasmr.engine.exec.trap.ModuleTrap;
 import tinywasmr.engine.exec.trap.Trap;
 import tinywasmr.engine.exec.value.Value;
@@ -36,7 +38,23 @@ public interface Machine {
 	 */
 	Frame peekFrame();
 
-	FunctionFrame peekFunctionFrame();
+	default FunctionFrame peekFunctionFrame() {
+		for (int i = getFrameStack().size() - 1; i >= 0; i--) {
+			Frame frame = getFrameStack().get(i);
+			if (frame instanceof FunctionFrame f) return f;
+		}
+
+		return null;
+	}
+
+	default InstancedFrame peekInstancedFrame() {
+		for (int i = getFrameStack().size() - 1; i >= 0; i--) {
+			Frame frame = getFrameStack().get(i);
+			if (frame instanceof InstancedFrame f) return f;
+		}
+
+		return null;
+	}
 
 	void pushFrame(Frame frame);
 
@@ -81,6 +99,10 @@ public interface Machine {
 	 * @param trap The trap to set.
 	 */
 	void setTrap(Trap trap);
+
+	default void setExternalTrap(Throwable t) {
+		setTrap(new ExternalTrap(t));
+	}
 
 	/**
 	 * <p>

@@ -3,7 +3,7 @@ package tinywasmr.engine.exec.frame;
 import java.util.List;
 
 import tinywasmr.engine.exec.value.Value;
-import tinywasmr.engine.insn.Instruction;
+import tinywasmr.engine.exec.vm.Machine;
 import tinywasmr.engine.type.BlockType;
 
 /**
@@ -74,17 +74,46 @@ public interface Frame {
 
 	Value peekOperand();
 
-	int getInsnIndex();
-
-	void setInsnIndex(int index);
+	/**
+	 * <p>
+	 * Get the current step of this frame. The step index will be stored when saving
+	 * the machine states.
+	 * </p>
+	 */
+	int getStep();
 
 	/**
 	 * <p>
-	 * Get an ordered list of instructions that is being executed by this frame. The
-	 * {@link #getInsnIndex()} points to an instruction in this list.
+	 * Set the current step of this frame.
 	 * </p>
 	 */
-	List<Instruction> getExecutingInsns();
+	void setStep(int index);
+
+	/**
+	 * <p>
+	 * Increase the step of this frame by 1.
+	 * </p>
+	 */
+	default void incStep() {
+		setStep(getStep() + 1);
+	}
+
+	/**
+	 * <p>
+	 * Check whether the execution of this frame is finished. Finished frame will be
+	 * popped from frame stack by executor.
+	 * </p>
+	 */
+	boolean isFrameFinished();
+
+	/**
+	 * <p>
+	 * Branch this frame. If the frame is function or block, it will pop the frame.
+	 * If the frame is a loop, it will reset the step index to 0 (equivalent of
+	 * {@code continue;} in most programming languages).
+	 * </p>
+	 */
+	void branchThis();
 
 	/**
 	 * <p>
@@ -95,11 +124,17 @@ public interface Frame {
 	 */
 	BlockType getBranchResultTypes();
 
-	default void incInsnIndex(int count) {
-		setInsnIndex(getInsnIndex() + count);
-	}
+	void executeStep(Machine vm);
 
-	default void incInsnIndex() {
-		setInsnIndex(getInsnIndex() + 1);
+	/**
+	 * <p>
+	 * Modify the state of this frame after execution. The default implementation is
+	 * increase the step index by 1, but instruction like {@code loop} may reset the
+	 * step index back to 0 when {@link #nextStep()} is called after
+	 * {@link #branchThis()}.
+	 * </p>
+	 */
+	default void nextStep() {
+		incStep();
 	}
 }

@@ -9,7 +9,7 @@ import tinywasmr.engine.module.func.FunctionDecl;
 public record RefFuncInsn(FunctionDecl function) implements Instruction {
 	@Override
 	public void execute(Machine vm) {
-		Function function = vm.peekFunctionFrame().getInstance().function(this.function);
+		Function function = vm.peekInstancedFrame().getInstance().function(this.function);
 		vm.peekFrame().pushOperand(new FuncRefValue(function));
 	}
 }

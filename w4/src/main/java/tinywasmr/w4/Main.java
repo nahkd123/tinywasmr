@@ -257,7 +257,7 @@ public class Main extends Application {
 		}
 
 		if (showCodeViewer) {
-			if (ImGui.begin("Code Viewer")) codeViewer.viewer(console, inspector.getSelectedFrame());
+			if (ImGui.begin("Code Viewer")) codeViewer.viewer(console);
 			ImGui.end();
 		}
 

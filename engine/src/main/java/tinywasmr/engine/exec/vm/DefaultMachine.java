@@ -6,12 +6,14 @@ import java.util.Stack;
 import tinywasmr.engine.exec.frame.ExternalFrame;
 import tinywasmr.engine.exec.frame.Frame;
 import tinywasmr.engine.exec.frame.FunctionFrame;
+import tinywasmr.engine.exec.frame.InstancedFrame;
 import tinywasmr.engine.exec.trap.Trap;
 
 public class DefaultMachine implements Machine {
 	private Trap trap = null;
 	private Stack<Frame> frames;
 	private Stack<FunctionFrame> functions;
+	private Stack<InstancedFrame> instanced;
 	private ExternalFrame extern;
 	private boolean runtimeValidation;
 
@@ -20,6 +22,7 @@ public class DefaultMachine implements Machine {
 			throw new IllegalArgumentException("The first frame is not ExternalFrame");
 		this.frames = new Stack<>();
 		this.functions = new Stack<>();
+		this.instanced = new Stack<>();
 		this.extern = extern;
 		for (Frame frame : frames) pushFrame(frame);
 		this.runtimeValidation = runtimeValidation;
@@ -46,16 +49,23 @@ public class DefaultMachine implements Machine {
 	}
 
 	@Override
+	public InstancedFrame peekInstancedFrame() {
+		return instanced.peek();
+	}
+
+	@Override
 	public void pushFrame(Frame frame) {
 		frames.push(frame);
 		if (frame instanceof FunctionFrame functionFrame) functions.push(functionFrame);
+		if (frame instanceof InstancedFrame instancedFrame) instanced.push(instancedFrame);
 	}
 
 	@Override
 	public Frame popFrame() {
 		if (frames.peek() == extern) throw new IllegalStateException("Can't pop ExternalFrame");
 		Frame out = frames.pop();
-		if (out == functions.peek()) functions.pop();
+		if (!functions.isEmpty() && out == functions.peek()) functions.pop();
+		if (!instanced.isEmpty() && out == instanced.peek()) instanced.pop();
 		return out;
 	}
 

@@ -7,10 +7,10 @@ import tinywasmr.engine.exec.value.Value;
 
 public abstract class AbstractFrame implements Frame {
 	private Stack<Value> operands;
-	private int insn;
+	private int step;
 
-	public AbstractFrame(List<Value> operands, int insn) {
-		this.insn = insn;
+	public AbstractFrame(List<Value> operands, int step) {
+		this.step = step;
 		this.operands = new Stack<>();
 		this.operands.addAll(operands);
 	}
@@ -34,27 +34,8 @@ public abstract class AbstractFrame implements Frame {
 	}
 
 	@Override
-	public int getInsnIndex() { return insn; }
+	public int getStep() { return step; }
 
 	@Override
-	public void setInsnIndex(int index) { this.insn = index; }
-
-	@Override
-	public void incInsnIndex() {
-		insn++;
-	}
-
-	@Override
-	public void incInsnIndex(int count) {
-		insn += count;
-	}
-
-	@Override
-	public String toString() {
-		return "%s %s insn %04d -> %s".formatted(
-			getClass().getSimpleName(),
-			operands,
-			insn,
-			insn < getExecutingInsns().size() ? getExecutingInsns().get(insn) : "<end of block>");
-	}
+	public void setStep(int index) { step = index; }
 }

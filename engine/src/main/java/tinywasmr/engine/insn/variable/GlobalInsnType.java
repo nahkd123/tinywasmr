@@ -8,7 +8,7 @@ public enum GlobalInsnType {
 	GET {
 		@Override
 		public void execute(Machine vm, GlobalDecl global) {
-			Value val = vm.peekFunctionFrame().getInstance().global(global).get();
+			Value val = vm.peekInstancedFrame().getInstance().global(global).get();
 			vm.peekFrame().pushOperand(val);
 		}
 	},
@@ -16,7 +16,7 @@ public enum GlobalInsnType {
 		@Override
 		public void execute(Machine vm, GlobalDecl global) {
 			Value val = vm.peekFrame().popOprand();
-			vm.peekFunctionFrame().getInstance().global(global).set(val);
+			vm.peekInstancedFrame().getInstance().global(global).set(val);
 		}
 	};
 

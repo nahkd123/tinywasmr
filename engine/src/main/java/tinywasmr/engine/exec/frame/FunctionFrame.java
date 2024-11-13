@@ -6,21 +6,23 @@ import java.util.List;
 import tinywasmr.engine.exec.instance.Function;
 import tinywasmr.engine.exec.instance.Instance;
 import tinywasmr.engine.exec.value.Value;
-import tinywasmr.engine.insn.Instruction;
+import tinywasmr.engine.exec.vm.Machine;
 import tinywasmr.engine.module.func.FunctionDecl;
 import tinywasmr.engine.module.func.ModuleFunctionDecl;
 import tinywasmr.engine.module.func.extern.ExternalFunctionDecl;
 import tinywasmr.engine.type.BlockType;
 import tinywasmr.engine.type.value.ValueType;
 
-public class FunctionFrame extends AbstractFrame {
+public class FunctionFrame extends AbstractFrame implements InstancedFrame {
 	private Function function;
 	private Value[] locals;
+	private boolean branched = false;
 
-	public FunctionFrame(Function function, List<Value> operands, Value[] locals, int insn) {
+	public FunctionFrame(Function function, Value[] locals, boolean branched, List<Value> operands, int insn) {
 		super(operands, insn);
 		this.function = function;
 		this.locals = locals;
+		this.branched = branched;
 	}
 
 	public static FunctionFrame createCall(Function function, Value[] parameters) {
@@ -36,7 +38,7 @@ public class FunctionFrame extends AbstractFrame {
 		} else throw new IllegalArgumentException("Cannot create function frame of %s".formatted(
 			function.declaration().getClass().getName()));
 
-		FunctionFrame out = new FunctionFrame(function, List.of(), new Value[allLocals.size()], 0);
+		FunctionFrame out = new FunctionFrame(function, new Value[allLocals.size()], false, Collections.emptyList(), 0);
 		for (int i = 0; i < parameters.length; i++) out.locals[i] = parameters[i];
 		for (int i = 0; i < extras.size(); i++) out.locals[parameters.length + i] = extras.get(i).zero();
 		return out;
@@ -46,14 +48,8 @@ public class FunctionFrame extends AbstractFrame {
 
 	public FunctionDecl getDeclaration() { return function.declaration(); }
 
-	public Instance getInstance() { return function.instance(); }
-
 	@Override
-	public List<Instruction> getExecutingInsns() {
-		return function.declaration() instanceof ModuleFunctionDecl moduleDecl
-			? moduleDecl.body()
-			: Collections.emptyList();
-	}
+	public Instance getInstance() { return function.instance(); }
 
 	/**
 	 * <p>
@@ -64,5 +60,34 @@ public class FunctionFrame extends AbstractFrame {
 	public Value[] getLocals() { return locals; }
 
 	@Override
+	public boolean isFrameFinished() {
+		// TODO Improve external function handling
+		if (function.declaration() instanceof ExternalFunctionDecl) return branched;
+		if (function.declaration() instanceof ModuleFunctionDecl module) return getStep() >= module.body().size();
+		return true;
+	}
+
+	public boolean isBranched() { return branched; }
+
+	@Override
+	public void branchThis() {
+		branched = true;
+		if (function.declaration() instanceof ModuleFunctionDecl module) setStep(module.body().size());
+	}
+
+	@Override
 	public BlockType getBranchResultTypes() { return function.type().outputs(); }
+
+	@Override
+	public void executeStep(Machine vm) {
+		if (function.declaration() instanceof ExternalFunctionDecl extern) {
+			extern.onStep(vm, this, locals, getStep());
+			return;
+		}
+
+		if (function.declaration() instanceof ModuleFunctionDecl module) {
+			if (getStep() < module.body().size()) module.body().get(getStep()).execute(vm);
+			return;
+		}
+	}
 }

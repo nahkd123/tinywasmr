@@ -7,7 +7,6 @@ import tinywasmr.engine.module.CustomSection;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.module.export.ExportDecl;
 import tinywasmr.engine.module.func.FunctionDecl;
-import tinywasmr.engine.module.func.InitializerFunctionDecl;
 import tinywasmr.engine.module.global.GlobalDecl;
 import tinywasmr.engine.module.imprt.ImportDecl;
 import tinywasmr.engine.module.memory.DataSegment;
@@ -26,7 +25,6 @@ public class ParsedWasmModule implements WasmModule {
 	private List<GlobalDecl> globals = new ArrayList<>();
 	private List<FunctionDecl> functions = new ArrayList<>();
 	private FunctionDecl start = null;
-	private InitializerFunctionDecl initializer = null;
 
 	@Override
 	public List<CustomSection> custom() {
@@ -79,10 +77,4 @@ public class ParsedWasmModule implements WasmModule {
 	}
 
 	public void setStart(FunctionDecl start) { this.start = start; }
-
-	@Override
-	public InitializerFunctionDecl initFunction() {
-		if (initializer == null) initializer = new InitializerFunctionDecl(this);
-		return initializer;
-	}
 }

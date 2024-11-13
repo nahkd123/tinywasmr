@@ -38,6 +38,12 @@ public record ByteArrayMemoryView(MemoryDecl declaration, int pageCount, byte[] 
 	public void read(int memoryOffset, byte[] target, int targetOffset, int count) {
 		int rangeStart = memoryOffset;
 		int rangeEnd = Math.min(content.length, memoryOffset + count);
+
+		if (rangeStart >= rangeEnd) {
+			Arrays.fill(target, targetOffset, targetOffset + count, (byte) 0);
+			return;
+		}
+
 		System.arraycopy(content, rangeStart, target, targetOffset, rangeEnd - rangeStart);
 		Arrays.fill(target, targetOffset + (rangeEnd - rangeStart), targetOffset + count, (byte) 0);
 	}
@@ -46,6 +52,7 @@ public record ByteArrayMemoryView(MemoryDecl declaration, int pageCount, byte[] 
 	public void write(int memoryOffset, byte[] source, int sourceOffset, int count) {
 		int rangeStart = memoryOffset;
 		int rangeEnd = Math.min(content.length, memoryOffset + count);
+		if (rangeStart >= rangeEnd) return;
 		System.arraycopy(source, sourceOffset, content, rangeStart, rangeEnd - rangeStart);
 	}
 

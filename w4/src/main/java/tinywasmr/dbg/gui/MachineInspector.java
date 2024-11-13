@@ -79,10 +79,11 @@ public class MachineInspector {
 					//
 				}
 
-				int currStep = frame.getInsnIndex();
-				int maxStep = frame.getExecutingInsns().size();
-				ImGui.sameLine();
-				ImGui.progressBar(currStep / (float) maxStep, "Insn -> %d out of %d".formatted(currStep, maxStep));
+				// int currStep = frame.getInsnIndex();
+				// int maxStep = frame.getExecutingInsns().size();
+				// ImGui.sameLine();
+				// ImGui.progressBar(currStep / (float) maxStep, "Insn -> %d out of
+				// %d".formatted(currStep, maxStep));
 			}
 
 			if (frame instanceof FunctionFrame func) {

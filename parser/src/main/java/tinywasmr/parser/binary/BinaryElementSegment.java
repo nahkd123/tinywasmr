@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import tinywasmr.engine.insn.control.BlockInsn;
 import tinywasmr.engine.insn.ref.RefFuncInsn;
 import tinywasmr.engine.module.table.ActiveElementMode;
 import tinywasmr.engine.module.table.ElementMode;
@@ -89,7 +88,7 @@ public record BinaryElementSegment(RefType type, int mode, int table, List<List<
 		}
 
 		return new ElementSegment(type, init.stream()
-			.map(expr -> new BlockInsn(type, expr.stream().map(b -> b.build(view)).toList()))
+			.map(expr -> expr.stream().map(b -> b.build(view)).toList())
 			.toList(), mode);
 	}
 }

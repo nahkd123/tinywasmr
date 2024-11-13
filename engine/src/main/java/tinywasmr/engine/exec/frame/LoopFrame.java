@@ -5,22 +5,23 @@ import java.util.List;
 
 import tinywasmr.engine.exec.value.Value;
 import tinywasmr.engine.exec.vm.Machine;
-import tinywasmr.engine.insn.control.BlockInsn;
+import tinywasmr.engine.insn.control.LoopInsn;
 import tinywasmr.engine.type.BlockType;
 
-public class BlockFrame extends AbstractFrame {
-	private BlockInsn block;
+public class LoopFrame extends AbstractFrame {
+	private LoopInsn block;
+	private boolean lastBranched = false;
 
-	public BlockFrame(BlockInsn block, List<Value> operands, int step) {
+	public LoopFrame(LoopInsn block, List<Value> operands, int step) {
 		super(operands, step);
 		this.block = block;
 	}
 
-	public BlockFrame(BlockInsn block) {
+	public LoopFrame(LoopInsn block) {
 		this(block, Collections.emptyList(), 0);
 	}
 
-	public BlockInsn getBlock() { return block; }
+	public LoopInsn getBlock() { return block; }
 
 	@Override
 	public BlockType getBranchResultTypes() { return block.blockType(); }
@@ -30,11 +31,21 @@ public class BlockFrame extends AbstractFrame {
 
 	@Override
 	public void branchThis() {
-		setStep(block.instructions().size());
+		if (lastBranched) throw new IllegalStateException("Branch state not resetted, use nextStep() to reset");
+		setStep(0);
+		getOperandStack().clear();
+		lastBranched = true;
 	}
 
 	@Override
 	public void executeStep(Machine vm) {
+		if (isFrameFinished()) return;
 		block.instructions().get(getStep()).execute(vm);
+	}
+
+	@Override
+	public void nextStep() {
+		if (!lastBranched) incStep();
+		else lastBranched = false;
 	}
 }
