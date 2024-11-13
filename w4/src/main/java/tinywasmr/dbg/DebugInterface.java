@@ -1,6 +1,11 @@
 package tinywasmr.dbg;
 
+import java.util.Collections;
+import java.util.List;
+
+import tinywasmr.engine.exec.instance.Instance;
 import tinywasmr.engine.exec.vm.Machine;
+import tinywasmr.engine.module.WasmModule;
 
 /**
  * <p>
@@ -12,6 +17,12 @@ public interface DebugInterface {
 	Machine getMachine();
 
 	DebugSymbols getSymbols();
+
+	default List<Instance> getDebuggingInstances() { return Collections.emptyList(); }
+
+	default List<WasmModule> getDebuggingModules() {
+		return getDebuggingInstances().stream().map(Instance::module).toList();
+	}
 
 	/**
 	 * <p>

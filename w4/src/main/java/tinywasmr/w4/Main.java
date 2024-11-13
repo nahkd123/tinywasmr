@@ -20,9 +20,9 @@ import imgui.flag.ImGuiConfigFlags;
 import imgui.flag.ImGuiWindowFlags;
 import tinywasmr.dbg.DebugStepMode;
 import tinywasmr.dbg.gui.AboutTinyWasmR;
-import tinywasmr.dbg.gui.CodeViewer;
 import tinywasmr.dbg.gui.MachineController;
 import tinywasmr.dbg.gui.MachineInspector;
+import tinywasmr.dbg.gui.codeviewer.CodeViewer;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.parser.binary.BinaryModuleParser;
 import tinywasmr.w4.gui.KeyCombination;
@@ -45,9 +45,9 @@ public class Main extends Application {
 	private MachineInspector inspector;
 	private CodeViewer codeViewer;
 	private MachineController controller;
-	private boolean showInspector = false;
-	private boolean showCodeViewer = false;
-	private boolean showController = false;
+	private boolean showInspector = true;
+	private boolean showCodeViewer = true;
+	private boolean showController = true;
 	private KeybindEntry keybindPause;
 	private KeybindEntry keybindStepIn;
 	private KeybindEntry keybindStepNext;
@@ -125,8 +125,8 @@ public class Main extends Application {
 					if (console == null) return;
 					console.step(DebugStepMode.OUT);
 				}, new KeyCombination(GLFW.GLFW_KEY_F6))))));
-		inspector = new MachineInspector();
-		codeViewer = new CodeViewer();
+		inspector = new MachineInspector(module -> codeViewer.openModule(module));
+		codeViewer = new CodeViewer(memory -> {});
 		controller = new MachineController();
 
 		GLFW.glfwSetKeyCallback(handle, (window, key, scancode, action, mods) -> {
@@ -257,7 +257,9 @@ public class Main extends Application {
 		}
 
 		if (showCodeViewer) {
-			if (ImGui.begin("Code Viewer")) codeViewer.viewer(console);
+			if (ImGui.begin("Code Viewer")) codeViewer.viewer(
+				console != null ? console.getSymbols() : null,
+				console);
 			ImGui.end();
 		}
 

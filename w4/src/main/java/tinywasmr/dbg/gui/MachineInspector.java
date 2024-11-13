@@ -2,6 +2,7 @@ package tinywasmr.dbg.gui;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import imgui.ImGui;
 import imgui.flag.ImGuiTreeNodeFlags;
@@ -13,6 +14,7 @@ import tinywasmr.engine.exec.frame.ExternalFrame;
 import tinywasmr.engine.exec.frame.Frame;
 import tinywasmr.engine.exec.frame.FunctionFrame;
 import tinywasmr.engine.exec.vm.Machine;
+import tinywasmr.engine.module.WasmModule;
 import tinywasmr.engine.type.value.NumberType;
 import tinywasmr.engine.type.value.RefType;
 import tinywasmr.engine.type.value.ValueType;
@@ -23,6 +25,12 @@ public class MachineInspector {
 	private ValueDisplayMode[] allValueDisplayModes = ValueDisplayMode.values();
 
 	private Frame selectedFrame = null;
+
+	private Consumer<WasmModule> onModuleOpen;
+
+	public MachineInspector(Consumer<WasmModule> onModuleOpen) {
+		this.onModuleOpen = onModuleOpen;
+	}
 
 	public void inspector(DebugInterface debug) {
 		ValueDisplayMode valueDisplay = allValueDisplayModes[valueDisplayMode[0]];
@@ -39,7 +47,17 @@ public class MachineInspector {
 			ImGui.unindent();
 		}
 
-		if (ImGui.collapsingHeader("Frame Stack")) {
+		if (ImGui.collapsingHeader("Modules", ImGuiTreeNodeFlags.DefaultOpen)) {
+			List<WasmModule> modules = debug != null ? debug.getDebuggingModules() : Collections.emptyList();
+
+			for (int i = 0; i < modules.size(); i++) {
+				WasmModule module = modules.get(i);
+				String name = debug.getSymbols().nameOf(module);
+				if (ImGui.selectable(name)) onModuleOpen.accept(module);
+			}
+		}
+
+		if (ImGui.collapsingHeader("Frame Stack", ImGuiTreeNodeFlags.DefaultOpen)) {
 			ImGui.indent();
 			List<Frame> frames = debug != null ? debug.getMachine().getFrameStack() : Collections.emptyList();
 			for (int i = 0; i < frames.size(); i++) frame(frames.get(i), i, valueDisplay, debug.getSymbols());

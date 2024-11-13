@@ -1,5 +1,6 @@
 package tinywasmr.w4;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import tinywasmr.dbg.AutoDebugSymbols;
@@ -73,6 +74,9 @@ public class W4 implements DebugInterface {
 
 	@Override
 	public Machine getMachine() { return machine; }
+
+	@Override
+	public List<Instance> getDebuggingInstances() { return List.of(env, cart); }
 
 	public ReflectedInstance<W4Environment> getEnv() { return env; }
 
