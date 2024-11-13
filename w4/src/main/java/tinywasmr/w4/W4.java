@@ -10,6 +10,7 @@ import tinywasmr.engine.exec.StepResult;
 import tinywasmr.engine.exec.executor.DefaultExecutor;
 import tinywasmr.engine.exec.executor.Executor;
 import tinywasmr.engine.exec.instance.DefaultInstance;
+import tinywasmr.engine.exec.instance.Export;
 import tinywasmr.engine.exec.instance.Instance;
 import tinywasmr.engine.exec.instance.SimpleImporter;
 import tinywasmr.engine.exec.trap.ExternalTrap;
@@ -194,10 +195,12 @@ public class W4 implements DebugInterface {
 			machine.call(cart.initFunction(), new Value[0]);
 			state = W4ConsoleState.START;
 			return StepResult.NORMAL;
-		case START:
-			machine.call(cart.export("start").asFunction(), new Value[0]);
+		case START: {
+			Export start = cart.export("start");
+			if (start != null) machine.call(start.asFunction(), new Value[0]);
 			state = W4ConsoleState.UPDATE;
 			return StepResult.NORMAL;
+		}
 		case UPDATE:
 			if ((env.object().getSystemFlags() & W4Environment.SYSTEM_PRESERVE_FB) == 0) getFramebuffer().clear();
 			machine.call(cart.export("update").asFunction(), new Value[0]);

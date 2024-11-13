@@ -156,4 +156,15 @@ public class W4Environment {
 	public void trace(int address) {
 		trace.accept(getNulTermAscii(address));
 	}
+
+	@Export(exportAs = "hline")
+	public void hline(int x, int y, int len) {
+		int dc0 = framebuffer.getDrawColor() & 0xf;
+		framebuffer.drawHLine(dc0, x, y, x + len);
+	}
+
+	@Export(exportAs = "vline")
+	public void vline(int x, int y, int len) {
+		framebuffer.drawVLine(x, y, len);
+	}
 }
