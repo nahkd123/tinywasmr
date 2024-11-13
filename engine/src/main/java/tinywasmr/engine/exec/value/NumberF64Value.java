@@ -31,6 +31,6 @@ public record NumberF64Value(double f64) implements Value {
 
 	@Override
 	public final String toString() {
-		return "f64 %d".formatted(f64);
+		return "f64 %f".formatted(f64);
 	}
 }

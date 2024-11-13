@@ -32,8 +32,8 @@ public enum ValueDisplayMode {
 			if (value instanceof RefValue ref) return refAsString(ref, symbols);
 			if (value instanceof NumberI32Value i32) return "%d".formatted(i32.i32());
 			if (value instanceof NumberI64Value i64) return "%d".formatted(i64.i64());
-			if (value instanceof NumberF32Value f32) return "%d".formatted(f32.f32());
-			if (value instanceof NumberF64Value f64) return "%d".formatted(f64.f64());
+			if (value instanceof NumberF32Value f32) return "%f".formatted(f32.f32());
+			if (value instanceof NumberF64Value f64) return "%f".formatted(f64.f64());
 			if (value instanceof Vector128Value v128) return "%d.%d".formatted(v128.msb(), v128.lsb());
 			return value.toString();
 		}
