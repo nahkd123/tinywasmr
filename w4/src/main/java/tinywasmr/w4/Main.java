@@ -22,7 +22,9 @@ import tinywasmr.dbg.DebugStepMode;
 import tinywasmr.dbg.gui.AboutTinyWasmR;
 import tinywasmr.dbg.gui.MachineController;
 import tinywasmr.dbg.gui.MachineInspector;
+import tinywasmr.dbg.gui.MemoryViewer;
 import tinywasmr.dbg.gui.codeviewer.CodeViewer;
+import tinywasmr.engine.exec.memory.Memory;
 import tinywasmr.engine.module.WasmModule;
 import tinywasmr.parser.binary.BinaryModuleParser;
 import tinywasmr.w4.gui.KeyCombination;
@@ -45,9 +47,11 @@ public class Main extends Application {
 	private MachineInspector inspector;
 	private CodeViewer codeViewer;
 	private MachineController controller;
+	private MemoryViewer memoryViewer;
 	private boolean showInspector = true;
 	private boolean showCodeViewer = true;
 	private boolean showController = true;
+	private boolean showMemoryViewer = true;
 	private KeybindEntry keybindPause;
 	private KeybindEntry keybindStepIn;
 	private KeybindEntry keybindStepNext;
@@ -126,8 +130,17 @@ public class Main extends Application {
 					console.step(DebugStepMode.OUT);
 				}, new KeyCombination(GLFW.GLFW_KEY_F6))))));
 		inspector = new MachineInspector(module -> codeViewer.openModule(module));
-		codeViewer = new CodeViewer(memory -> {});
+		codeViewer = new CodeViewer(memory -> {
+			if (console == null) return;
+			Memory memoryInst = console.getDebuggingInstances().stream()
+				.map(v -> v.memory(memory))
+				.filter(v -> v != null)
+				.findAny()
+				.orElse(null);
+			memoryViewer.setMemory(memoryInst);
+		});
 		controller = new MachineController();
+		memoryViewer = new MemoryViewer();
 
 		GLFW.glfwSetKeyCallback(handle, (window, key, scancode, action, mods) -> {
 			if (keybinds.getConfiguringKeybind() != null) {
@@ -235,6 +248,7 @@ public class Main extends Application {
 		if (ImGui.menuItem("Machine Inspector", showInspector)) showInspector = !showInspector;
 		if (ImGui.menuItem("Code Viewer", showCodeViewer)) showCodeViewer = !showCodeViewer;
 		if (ImGui.menuItem("Machine Controller", showController)) showController = !showController;
+		if (ImGui.menuItem("Memory Viewer", showMemoryViewer)) showMemoryViewer = !showMemoryViewer;
 	}
 
 	private void w4Windows() {
@@ -266,6 +280,12 @@ public class Main extends Application {
 		if (showController) {
 			if (ImGui.begin("Machine Controller", ImGuiWindowFlags.AlwaysAutoResize))
 				controller.controller(console);
+			ImGui.end();
+		}
+
+		if (showMemoryViewer) {
+			if (ImGui.begin("Memory Viewer"))
+				memoryViewer.memoryViewer();
 			ImGui.end();
 		}
 	}

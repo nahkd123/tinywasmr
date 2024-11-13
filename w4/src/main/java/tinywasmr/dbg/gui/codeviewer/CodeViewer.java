@@ -206,7 +206,6 @@ public class CodeViewer {
 
 	public void instruction(Instruction insn, DebugSymbols symbols, DebugInterface debug, int stepIndex) {
 		ImGui.beginGroup();
-		// char insnPointerChar = isExecutingInstruction(insn, debug) ? '>' : ' ';
 		String prefix = "%03d".formatted(stepIndex);
 
 		if (insn instanceof LoadInsn load) {

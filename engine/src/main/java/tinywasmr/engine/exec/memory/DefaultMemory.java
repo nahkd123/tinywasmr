@@ -31,6 +31,8 @@ public class DefaultMemory implements Memory {
 		return pages.length;
 	}
 
+	public byte[][] getPages() { return pages; }
+
 	@Override
 	public int grow(int deltaPages) {
 		if (deltaPages == 0) return pages.length;
