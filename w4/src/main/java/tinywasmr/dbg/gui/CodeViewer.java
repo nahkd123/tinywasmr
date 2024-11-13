@@ -6,6 +6,11 @@ import imgui.ImGui;
 import tinywasmr.dbg.DebugInterface;
 import tinywasmr.dbg.DebugSymbols;
 import tinywasmr.engine.exec.frame.Frame;
+import tinywasmr.engine.exec.value.NumberF32Value;
+import tinywasmr.engine.exec.value.NumberF64Value;
+import tinywasmr.engine.exec.value.NumberI32Value;
+import tinywasmr.engine.exec.value.NumberI64Value;
+import tinywasmr.engine.insn.ConstInsn;
 import tinywasmr.engine.insn.Instruction;
 import tinywasmr.engine.insn.control.BlockInsn;
 import tinywasmr.engine.insn.control.BranchIfInsn;
@@ -64,6 +69,14 @@ public class CodeViewer {
 	}
 
 	public String nameOf(Instruction insn, DebugSymbols symbols) {
+		if (insn instanceof ConstInsn constant) {
+			if (constant.value() instanceof NumberI32Value i32) return "i32.const %d".formatted(i32.i32());
+			if (constant.value() instanceof NumberI64Value i64) return "i64.const %d".formatted(i64.i64());
+			if (constant.value() instanceof NumberF32Value f32) return "f32.const %f".formatted(f32.f32());
+			if (constant.value() instanceof NumberF64Value f64) return "f64.const %f".formatted(f64.f64());
+			return "<%s>.const %s".formatted(constant.value().type(), constant.value());
+		}
+
 		if (insn instanceof ControlInsn control) return switch (control) {
 		case NOP -> "nop";
 		case RETURN -> "return";
