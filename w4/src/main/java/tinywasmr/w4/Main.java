@@ -72,7 +72,7 @@ public class Main extends Application {
 	protected void initImGui(Configuration config) {
 		super.initImGui(config);
 		ImGuiIO io = ImGui.getIO();
-		io.setIniFilename(null);
+		io.setIniFilename("imgui.ini");
 		io.addConfigFlags(ImGuiConfigFlags.DockingEnable);
 		io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable);
 		io.getFonts().addFontFromFileTTF("C:\\Windows\\Fonts\\consola.ttf", 16f);
